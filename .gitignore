@@ -39,3 +39,4 @@ rsconnect/
 
 olddata/*
 
+.DS_Store
