@@ -1,0 +1,75 @@
+---
+title: "spacetimeadultanalysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-libraries, library, message=F, results='hide', warning=FALSE}
+library(tidyverse)
+library(knitr)
+library(tidyboot)
+library(dplyr)
+
+theme_set(theme_classic(base_size = 16))
+```
+
+```{r}
+longdata <- read_csv("longneighborscoded.csv") %>%
+  mutate(spacetime = as_factor(spacetime)) %>%
+  mutate(distbin = cut(distance, breaks = 10, labels = FALSE))
+
+shortdata <- read_csv("shortneighborscoded.csv") %>%
+  mutate(spacetime = ifelse(spacetime == "o", "other",spacetime),
+         spacetime = ifelse(spacetime == "s", "space",spacetime),
+         spacetime = ifelse(spacetime == "t", "time",spacetime),
+         spacetime = ifelse(spacetime == "b", "both",spacetime),
+         spacetime = as_factor(spacetime)) %>%
+  mutate(distbin = cut(distance, breaks = 10, labels = FALSE))
+
+longmeans <- longdata %>%
+  group_by(spacetime, word) %>%
+  summarise(dist = mean(distance)) %>%
+  tidyboot_mean(dist)
+
+shortmeans <- shortdata %>%
+  group_by(spacetime, word) %>%
+  summarise(dist = mean(distance)) %>%
+  tidyboot_mean(dist)
+```
+
+```{r}
+hist(longdata$distance)
+hist(shortdata$distance)
+```
+
+
+Mean distances of space, time, both and other words from "long".
+```{r}
+longmeans %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+```
+
+
+Mean distances of space, time, both and other words from "short".
+```{r}
+shortmeans %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+```
+
+A plot of distances 
+```{r}
+longoverdist <- longdata %>%
+  group_by(distbin, spacetime, word) %>%
+  summarise(dist = mean(distance)) %>%
+  tidyboot_mean(dist)
+
+longoverdist %>%
+  ggplot(aes(x = distbin, y = empirical_stat, color = spacetime)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+```
+
