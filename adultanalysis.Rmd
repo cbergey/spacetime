@@ -40,8 +40,13 @@ shortmeans <- shortdata %>%
   tidyboot_mean(dist)
 ```
 
+A histogram of word distances from "long".
 ```{r}
 hist(longdata$distance)
+```
+
+A histogram of word distances from "short".
+```{r}
 hist(shortdata$distance)
 ```
 
@@ -61,7 +66,7 @@ shortmeans %>%
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
 ```
 
-A plot of distances 
+A plot of mean distances of space, time, both and other words from "long" over distance bins.
 ```{r}
 longoverdist <- longdata %>%
   group_by(distbin, spacetime, word) %>%
@@ -73,3 +78,15 @@ longoverdist %>%
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
 ```
 
+
+A plot of mean distances of space, time, both and other words from "short" over distance bins.
+```{r}
+shortoverdist <- shortdata %>%
+  group_by(distbin, spacetime, word) %>%
+  summarise(dist = mean(distance)) %>%
+  tidyboot_mean(dist)
+
+shortoverdist %>%
+  ggplot(aes(x = distbin, y = empirical_stat, color = spacetime)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+```
