@@ -8,10 +8,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r load-libraries, library, message=F, results='hide', warning=FALSE}
-library(tidyverse)
 library(knitr)
 library(tidyboot)
-library(dplyr)
+library(tidyverse)
 
 theme_set(theme_classic(base_size = 16))
 ```
@@ -19,7 +18,8 @@ theme_set(theme_classic(base_size = 16))
 ```{r}
 longdata <- read_csv("longneighborscoded.csv") %>%
   mutate(spacetime = as_factor(spacetime)) %>%
-  mutate(distbin = cut(distance, breaks = 10, labels = FALSE))
+  mutate(distbin = cut(distance, breaks = 10, labels = FALSE),
+         expdist = exp(distance))
 
 shortdata <- read_csv("shortneighborscoded.csv") %>%
   mutate(spacetime = ifelse(spacetime == "o", "other",spacetime),
@@ -27,17 +27,18 @@ shortdata <- read_csv("shortneighborscoded.csv") %>%
          spacetime = ifelse(spacetime == "t", "time",spacetime),
          spacetime = ifelse(spacetime == "b", "both",spacetime),
          spacetime = as_factor(spacetime)) %>%
-  mutate(distbin = cut(distance, breaks = 10, labels = FALSE))
+  mutate(distbin = cut(distance, breaks = 10, labels = FALSE),
+        expdist = exp(distance))
 
 longmeans <- longdata %>%
   group_by(spacetime, word) %>%
-  summarise(dist = mean(distance)) %>%
-  tidyboot_mean(dist)
+  summarise_at(vars(distance,expdist), mean) %>%
+  tidyboot_mean(expdist)
 
 shortmeans <- shortdata %>%
   group_by(spacetime, word) %>%
-  summarise(dist = mean(distance)) %>%
-  tidyboot_mean(dist)
+  summarise_at(vars(distance,expdist), mean) %>%
+  tidyboot_mean(expdist)
 ```
 
 A histogram of word distances from "long".
