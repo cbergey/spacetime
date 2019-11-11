@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r load-libraries, library, message=F, results='hide', warning=FALSE}
@@ -18,8 +18,8 @@ theme_set(theme_classic(base_size = 16))
 ```{r}
 longdata <- read_csv("longneighborscoded.csv") %>%
   mutate(spacetime = as_factor(spacetime)) %>%
-  mutate(distbin = cut(distance, breaks = 10, labels = FALSE),
-         expdist = exp(distance))
+  mutate(expdist = exp(distance)) %>%
+  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
 
 shortdata <- read_csv("shortneighborscoded.csv") %>%
   mutate(spacetime = ifelse(spacetime == "o", "other",spacetime),
@@ -27,32 +27,39 @@ shortdata <- read_csv("shortneighborscoded.csv") %>%
          spacetime = ifelse(spacetime == "t", "time",spacetime),
          spacetime = ifelse(spacetime == "b", "both",spacetime),
          spacetime = as_factor(spacetime)) %>%
-  mutate(distbin = cut(distance, breaks = 10, labels = FALSE),
-        expdist = exp(distance))
+  mutate(expdist = exp(distance)) %>%
+  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
 
 longmeans <- longdata %>%
   group_by(spacetime, word) %>%
   summarise_at(vars(distance,expdist), mean) %>%
-  tidyboot_mean(expdist)
+  tidyboot_mean(expdist) %>%
+  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
 
 shortmeans <- shortdata %>%
   group_by(spacetime, word) %>%
   summarise_at(vars(distance,expdist), mean) %>%
-  tidyboot_mean(expdist)
+  tidyboot_mean(expdist) %>%
+  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
 ```
 
-A histogram of word distances from "long".
+A histogram of exponentiated word distances from "long".
+
+Exponentiating the distances spaces out further distances. This helps deal with the fact that in any space, there are more things further from you than closer to you: a unit increase in radius corresponds to a unit squared increase in area covered. The transformation helps normalize the distribution of words over distance. Throughout, we will be using exponentiated distances.
+
 ```{r}
-hist(longdata$distance)
+hist(longdata$expdist)
 ```
 
-A histogram of word distances from "short".
+A histogram of exponentiated word distances from "short".
+
 ```{r}
-hist(shortdata$distance)
+hist(shortdata$expdist)
 ```
 
 
-Mean distances of space, time, both and other words from "long".
+Mean distances of space, time, both and other words from "long". Error bars here and throughout are 95% bootstrapped confidence intervals.
+
 ```{r}
 longmeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
@@ -61,33 +68,130 @@ longmeans %>%
 
 
 Mean distances of space, time, both and other words from "short".
+
 ```{r}
 shortmeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
 ```
 
-A plot of mean distances of space, time, both and other words from "long" over distance bins.
 ```{r}
-longoverdist <- longdata %>%
-  group_by(distbin, spacetime, word) %>%
-  summarise(dist = mean(distance)) %>%
-  tidyboot_mean(dist)
+# A plot of mean distances of space, time, both and other words from "long" over distance bins.
+# 
+# 
+# longoverdist <- longdata %>%
+#   group_by(distbin, spacetime, word) %>%
+#   summarise(expdist = mean(expdist)) %>%
+#   tidyboot_mean(expdist) 
+# 
+# longoverdist %>%
+#   ggplot(aes(x = distbin, y = empirical_stat, color = spacetime)) +
+#   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+#   geom_jitter(width = 1)
+```
 
-longoverdist %>%
-  ggplot(aes(x = distbin, y = empirical_stat, color = spacetime)) +
-  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+```{r}
+# A plot of mean distances of space, time, both and other words from "short" over distance bins.
+# 
+# 
+# shortoverdist <- shortdata %>%
+#   group_by(distbin, spacetime, word) %>%
+#   summarise(dist = mean(distance)) %>%
+#   tidyboot_mean(dist) %>%
+#   mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+# 
+# shortoverdist %>%
+#   ggplot(aes(x = distbin, y = empirical_stat, color = spacetime)) +
+#   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+#   geom_jitter(width = 1)
+```
+
+A plot of mean distances of space, time, both and other words from "long" within the closest 20, 100, and 999 neighbors.
+
+```{r}
+longmeans$threshold = "closest 999"
+
+longmeans20 <- longdata %>%
+  top_n(20, -expdist) %>%
+  group_by(spacetime, word) %>%
+  summarise(expdist = mean(expdist)) %>%
+  tidyboot_mean(expdist) %>%
+  mutate(threshold = "closest 20")
+
+longmeansAll <- longdata %>%
+  top_n(100, -expdist) %>%
+  group_by(spacetime, word) %>%
+  summarise(expdist = mean(expdist)) %>%
+  tidyboot_mean(expdist) %>%
+  mutate(threshold = "closest 100") %>%
+  rbind(longmeans20) %>%
+  rbind(longmeans) %>%
+  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 999"))) %>%
+  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+
+
+longmeansAll %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~threshold) +
+  geom_text(aes(label = n), vjust=4.5, size = 6)
+```
+
+A plot of mean distances of space, time, both and other words from "short" within the closest 20, 100, and 999 neighbors.
+
+```{r}
+shortmeans$threshold = "closest 999"
+
+shortmeans20 <- shortdata %>%
+  top_n(20, -expdist) %>%
+  group_by(spacetime, word) %>%
+  summarise(expdist = mean(expdist)) %>%
+  tidyboot_mean(expdist) %>%
+  mutate(threshold = "closest 20")
+
+shortmeansAll <- shortdata %>%
+  top_n(100, -expdist) %>%
+  group_by(spacetime, word) %>%
+  summarise(expdist = mean(expdist)) %>%
+  tidyboot_mean(expdist) %>%
+  mutate(threshold = "closest 100") %>%
+  rbind(shortmeans20) %>%
+  rbind(shortmeans) %>%
+  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 999"))) %>%
+  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time"))) 
+
+shortmeansAll %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~threshold) +
+  geom_text(aes(label = n), vjust=5.5, size = 6) 
+
 ```
 
 
-A plot of mean distances of space, time, both and other words from "short" over distance bins.
-```{r}
-shortoverdist <- shortdata %>%
-  group_by(distbin, spacetime, word) %>%
-  summarise(dist = mean(distance)) %>%
-  tidyboot_mean(dist)
+Linear model predicting distance from "long" by word type (space, time, etc.) in the closest 100 words, where we're more likely to see differences. Space is the reference category. Space and time are not significantly different.
 
-shortoverdist %>%
-  ggplot(aes(x = distbin, y = empirical_stat, color = spacetime)) +
-  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+```{r}
+longmodeldata <- longdata %>%
+  top_n(100, -expdist) %>%
+  mutate(spacetime = relevel(spacetime, ref = 'space'))
+         
+longmodel <- glm(expdist ~ spacetime, family = gaussian, data = longmodeldata)
+
+summary(longmodel)
 ```
+
+Linear model predicting distance from "short" by word type (space, time, etc.) in the closest 100 words, where we're more likely to see differences. Space is the reference category. Space and time are not significantly different.
+
+```{r}
+shortmodeldata <- shortdata %>%
+  top_n(100, -expdist) %>%
+  mutate(spacetime = relevel(spacetime, ref = 'space'))
+         
+shortmodel <- glm(expdist ~ spacetime, family = gaussian, data = shortmodeldata)
+
+summary(shortmodel)
+```
+
+
+
