@@ -1,6 +1,6 @@
 ---
 title: "spacetimeadultanalysis"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +15,19 @@ library(tidyverse)
 theme_set(theme_classic(base_size = 16))
 ```
 
-```{r}
+```{r message = FALSE}
+# a function to get mean exponentiated distances for word types
+getmeans <- function(data) {
+  newdata <- data %>%
+    group_by(spacetime, word) %>%
+    summarise_at(vars(distance,expdist), mean) %>%
+    tidyboot_mean(expdist) %>%
+    mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+  return(newdata)
+}
+```
+
+```{r message = FALSE, warning=FALSE}
 longdata <- read_csv("longneighborscoded.csv") %>%
   mutate(spacetime = as_factor(spacetime)) %>%
   mutate(expdist = exp(distance)) %>%
@@ -30,20 +42,31 @@ shortdata <- read_csv("shortneighborscoded.csv") %>%
   mutate(expdist = exp(distance)) %>%
   mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
 
-longmeans <- longdata %>%
-  group_by(spacetime, word) %>%
-  summarise_at(vars(distance,expdist), mean) %>%
-  tidyboot_mean(expdist) %>%
-  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+widedata <- read_csv("wide.csv") %>%
+  mutate(spacetime = ifelse(spacetime == "o", "other",spacetime),
+         spacetime = ifelse(spacetime == "s", "space",spacetime),
+         spacetime = ifelse(spacetime == "t", "time",spacetime),
+         spacetime = ifelse(spacetime == "b", "both",spacetime),
+         spacetime = as_factor(spacetime)) %>%
+  mutate(expdist = exp(distance)) %>%
+  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
 
-shortmeans <- shortdata %>%
-  group_by(spacetime, word) %>%
-  summarise_at(vars(distance,expdist), mean) %>%
-  tidyboot_mean(expdist) %>%
-  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+soondata <- read_csv("soon.csv") %>%
+  mutate(spacetime = as_factor(spacetime)) %>%
+  mutate(expdist = exp(distance)) %>%
+  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
+
+longmeans <- getmeans(longdata)
+
+shortmeans <- getmeans(shortdata)
+
+soonmeans <- getmeans(soondata)
+
+widemeans <- getmeans(widedata)
+
 ```
 
-A histogram of exponentiated word distances from "long".
+Below: A histogram of exponentiated word distances from "long". These are the closest 999 words.
 
 Exponentiating the distances spaces out further distances. This helps deal with the fact that in any space, there are more things further from you than closer to you: a unit increase in radius corresponds to a unit squared increase in area covered. The transformation helps normalize the distribution of words over distance. Throughout, we will be using exponentiated distances.
 
@@ -51,14 +74,33 @@ Exponentiating the distances spaces out further distances. This helps deal with 
 hist(longdata$expdist)
 ```
 
-A histogram of exponentiated word distances from "short".
+
+
+Below: A histogram of exponentiated word distances from "short". These are the closest 999 words.
 
 ```{r}
 hist(shortdata$expdist)
 ```
 
 
-Mean distances of space, time, both and other words from "long". Error bars here and throughout are 95% bootstrapped confidence intervals.
+
+Below: A histogram of exponentiated word distances from "soon". These are the closest 100 words.
+
+```{r}
+hist(soondata$expdist)
+```
+
+
+
+Below: A histogram of exponentiated word distances from "wide". These are the closest 100 words.
+
+```{r}
+hist(widedata$expdist)
+```
+
+
+
+Below: Mean distances of space, time, both and other words from "long". Error bars here and throughout are 95% bootstrapped confidence intervals.
 
 ```{r}
 longmeans %>%
@@ -67,10 +109,31 @@ longmeans %>%
 ```
 
 
-Mean distances of space, time, both and other words from "short".
+
+Below: Mean distances of space, time, both and other words from "short".
 
 ```{r}
 shortmeans %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+```
+
+
+
+Below: Mean distances of space, time, both and other words from "soon".
+
+```{r}
+soonmeans %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+```
+
+
+
+Below: Mean distances of space, time, both and other words from "wide". Note: there were no pure time words for 'wide'.
+
+```{r}
+widemeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
 ```
@@ -106,7 +169,9 @@ shortmeans %>%
 #   geom_jitter(width = 1)
 ```
 
-A plot of mean distances of space, time, both and other words from "long" within the closest 20, 100, and 999 neighbors.
+
+
+Below: A plot of mean distances of space, time, both and other words from "long" within the closest 20, 100, and 999 neighbors. The numbers on the plot denote the number of words of that type in that range of neighbors.
 
 ```{r}
 longmeans$threshold = "closest 999"
@@ -137,7 +202,8 @@ longmeansAll %>%
   geom_text(aes(label = n), vjust=4.5, size = 6)
 ```
 
-A plot of mean distances of space, time, both and other words from "short" within the closest 20, 100, and 999 neighbors.
+
+Below: A plot of mean distances of space, time, both and other words from "short" within the closest 20, 100, and 999 neighbors.
 
 ```{r}
 shortmeans$threshold = "closest 999"
@@ -169,7 +235,8 @@ shortmeansAll %>%
 ```
 
 
-Linear model predicting distance from "long" by word type (space, time, etc.) in the closest 100 words, where we're more likely to see differences. Space is the reference category. Space and time are not significantly different.
+
+Below: Linear model predicting distance from "long" by word type (space, time, etc.) in the closest 100 words, where we're more likely to see differences. Space is the reference category. Space and time are not significantly different.
 
 ```{r}
 longmodeldata <- longdata %>%
@@ -181,7 +248,9 @@ longmodel <- glm(expdist ~ spacetime, family = gaussian, data = longmodeldata)
 summary(longmodel)
 ```
 
-Linear model predicting distance from "short" by word type (space, time, etc.) in the closest 100 words, where we're more likely to see differences. Space is the reference category. Space and time are not significantly different.
+
+
+Below: Linear model predicting distance from "short" by word type (space, time, etc.) in the closest 100 words, where we're more likely to see differences. Space is the reference category. Space and time are not significantly different.
 
 ```{r}
 shortmodeldata <- shortdata %>%
@@ -195,3 +264,28 @@ summary(shortmodel)
 
 
 
+Below: Linear model predicting distance from "soon" by word type (space, time, etc.) in the closest 100 words. Time is significantly different from 'both' and 'other'; there's only one space word, so the difference in distance probably can't be reliably predicted.
+
+```{r}
+soonmodeldata <- soondata %>%
+  top_n(100, -expdist) %>%
+  mutate(spacetime = relevel(spacetime, ref = 'time'))
+         
+soonmodel <- glm(expdist ~ spacetime, family = gaussian, data = soonmodeldata)
+
+summary(soonmodel)
+```
+
+
+
+Below: Linear model predicting distance from "wide" by word type (space, time, etc.) in the closest 100 words. Space is significantly different from 'other', marginally from 'both'; there are no time words to predict from.
+
+```{r}
+widemodeldata <- widedata %>%
+  top_n(100, -expdist) %>%
+  mutate(spacetime = relevel(spacetime, ref = 'space'))
+         
+widemodel <- glm(expdist ~ spacetime, family = gaussian, data = widemodeldata)
+
+summary(widemodel)
+```
