@@ -1,7 +1,3 @@
-''' 
-Claire Bergey 2019
-'''
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import io
 import os
@@ -11,11 +7,9 @@ import gensim.models.word2vec
 from gensim.test.utils import datapath
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-import tempfile
-
-# download google dataset to get their test items to gauge accuracy later on 
-import gensim.downloader as api
-#google = api.load('word2vec-google-news-300')
+from sklearn.decomposition import IncrementalPCA    
+from sklearn.manifold import TSNE                   
+import numpy as np   
 
 model = gensim.models.Word2Vec.load("coca_word2vec.model")
 
@@ -31,14 +25,9 @@ pairs = [
 for w1, w2 in pairs:
   print('%r\t%r\t%.2f' % (w1, w2, model.wv.similarity(w1, w2)))
 
-#model.accuracy('./datasets/questions-words.txt')
 model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
-from sklearn.decomposition import IncrementalPCA    # inital reduction
-from sklearn.manifold import TSNE                   # final reduction
-import numpy as np                                  # array handling
-
-
+# functions below adapted from gensim dim reduction tutorial
 def reduce_dimensions(model):
     num_dimensions = 2  # final num dimensions (2D, 3D, etc)
 
@@ -87,15 +76,12 @@ def plot_with_matplotlib(x_vals, y_vals, labels):
     plt.figure(figsize=(12, 12))
     plt.scatter(x_vals, y_vals)
 
-    #
-    # Label randomly subsampled 25 data points
-    #
     indices = list(range(len(labels)))
-    selected_indices = random.sample(indices, 25)
+    selected_indices = random.sample(indices, 50)
     for i in selected_indices:
         plt.annotate(labels[i], (x_vals[i], y_vals[i]))
     plt.show()
-    plt.savefig('small_COCA.png')
+    plt.savefig('COCA.png')
 
 try:
     get_ipython()
