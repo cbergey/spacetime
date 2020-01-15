@@ -1,0 +1,40 @@
+---
+title: "Similar Tangrams"
+author: "Dan Yurovsky"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+  toc: false
+number_sections: false
+theme: lumen
+toc_float: false
+code_folding: hide
+---
+  
+```{r load-libraries, warning = FALSE, show = FALSE}
+
+library(here)
+library(knitr)
+library(childesr)
+library(tidyverse)
+library(glue)
+
+opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+               error = FALSE, cache = TRUE, tidy = FALSE)
+```
+
+```{r read-childes}
+utterances <- get_utterances(collection = "Eng-NA")
+
+utterances %>%
+  filter(speaker_role %in% c("Target_Child", "Child")) %>%
+  pull(gloss) %>%
+  str_to_lower() %>%
+  write_lines(here("childes/child.txt"))
+
+utterances %>%
+  filter(speaker_role %in% c("Mother", "Father", "Adult")) %>%
+  pull(gloss) %>%
+  str_to_lower() %>%
+  write_lines(here("childes/adult.txt"))
+```
