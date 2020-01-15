@@ -10,6 +10,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 from sklearn.decomposition import IncrementalPCA    
 from sklearn.manifold import TSNE                   
 import numpy as np   
+import csv
 
 model = gensim.models.Word2Vec.load("coca_word2vec.model")
 
@@ -20,6 +21,8 @@ pairs = [
     ('car', 'pear'),   
     ('car', 'justice'),
     ('king', 'queen'),
+    ('chicken','beef'),
+    ('chicken','pig'),
 ]
 
 for w1, w2 in pairs:
@@ -51,6 +54,53 @@ def reduce_dimensions(model):
     return x_vals, y_vals, labels
 
 
+def writecsv(name, neighbors, targetword):
+    with open(name, 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=' ',
+            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(['word, distance, targetword'])
+        for w in neighbors:
+            row = [w[0] + ',' + str(w[1]) + ',' + targetword]
+            writer.writerow(row)
+
+soonneighbors = model.wv.most_similar(positive = 'soon', topn = 20)
+
+for w in soonneighbors:
+    print(w[0],w[1])
+
+def getneighbors(word, n):
+    neighbors = model.wv.most_similar(positive = word, topn = n)
+    writecsv('coca' + word + 'neighbors.csv', neighbors, word)
+
+wordstogetneighbors = [
+    ('long', 500),
+    ('short', 500),
+    ('soon', 100),
+    ('wide', 100),
+]
+
+for word, numneighbors in wordstogetneighbors:
+    getneighbors(word, numneighbors)
+
+'''    
+longneighbors = model.wv.most_similar(positive = 'long', topn = 500)
+
+writecsv('cocalongneighbors.csv', longneighbors, 'long')
+
+shortneighbors = model.wv.most_similar(positive = 'short', topn = 500)
+
+writecsv('cocashortneighbors.csv', shortneighbors, 'short')
+
+soonneighbors = model.wv.most_similar(positive = 'soon', topn = 100)
+
+writecsv('cocasoonneighbors.csv', soonneighbors, 'soon')
+
+wideneighbors = model.wv.most_similar(positive = 'wide', topn = 100)
+
+writecsv('cocawideneighbors.csv', wideneighbors, 'soon')
+'''
+
+'''
 x_vals, y_vals, labels = reduce_dimensions(model)
 
 def plot_with_plotly(x_vals, y_vals, labels, plot_in_notebook=True):
@@ -91,4 +141,4 @@ else:
     plot_function = plot_with_plotly
 
 plot_function(x_vals, y_vals, labels)
-
+'''
