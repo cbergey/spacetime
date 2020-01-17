@@ -13,7 +13,7 @@ FILE_NAMES = []
 
 FILE_NAMES.append('child.txt')
 
-read_dir = '/Users/clairebergey/Documents/spacetime/childes'
+read_dir = '../childes'
 
 exclude = set('@#1234567890()*')
 

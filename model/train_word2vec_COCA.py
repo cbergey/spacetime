@@ -15,7 +15,7 @@ for year in range(1990,2013):
   FILE_NAMES.append('text_fiction_awq/w_fic_' + str(year) + '.txt')
   FILE_NAMES.append('text_magazine_qkk/w_mag_' + str(year) + '.txt')
 
-read_dir = '/Users/clairebergey/Box/COCA/texts'
+read_dir = '~/Box/COCA/texts'
 
 exclude = set('@#1234567890()*')
 

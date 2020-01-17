@@ -21,9 +21,23 @@ theme_set(theme_classic(base_size = 16))
 get_means <- function(data) {
   newdata <- data %>%
     group_by(spacetime, word) %>%
-    summarise_at(vars(distance,expdist), mean) %>%
+    summarise_at(vars(distance,expdist,inversedist), mean) %>%
     tidyboot_mean(expdist) %>%
-    mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+    mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time"))) 
+  return(newdata)
+}
+```
+
+```{r message = FALSE}
+# a function to get summed inverse exponentiated distances for word types
+get_sums <- function(data) {
+  newdata <- data %>%
+    group_by(spacetime, word) %>%
+    summarise_at(vars(inversedist), sum) %>%
+    tidyboot(inversedist, summary_function = sum(inversedist), 
+             statistics_functions =  list("ci_lower" = ci_lower,
+                                          "sum" = mean,
+                                          "ci_upper" = ci_upper))
   return(newdata)
 }
 ```
@@ -39,6 +53,7 @@ read_data <- function(data) {
          spacetime = as_factor(spacetime)) %>%
   mutate(spacetime = as_factor(spacetime)) %>%
   mutate(expdist = exp(distance)) %>%
+  mutate(inversedist = 1/expdist) %>%
   mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
   return(cleandata)
 }
@@ -54,16 +69,18 @@ widedata <- read_data(read_csv(here("neighbors/cocawideneighbors.csv")))
 soondata <- read_data(read_csv(here("neighbors/cocasoonneighbors.csv"))) 
 
 longmeans <- get_means(longdata)
-
 shortmeans <- get_means(shortdata)
-
 soonmeans <- get_means(soondata)
-
 widemeans <- get_means(widedata)
+
+longsums <- get_sums(longdata)
+shortsums <- get_sums(shortdata)
+soonsums <- get_sums(soondata)
+widesums <- get_sums(widedata)
 
 ```
 
-Below: A histogram of exponentiated word distances from "long". These are the closest 999 words.
+Below: A histogram of exponentiated word distances from "long". These are the closest 500 words.
 
 Exponentiating the distances spaces out further distances. This helps deal with the fact that in any space, there are more things further from you than closer to you: a unit increase in radius corresponds to a unit squared increase in area covered. The transformation helps normalize the distribution of words over distance. Throughout, we will be using exponentiated distances.
 
@@ -73,7 +90,7 @@ hist(longdata$expdist)
 
 
 
-Below: A histogram of exponentiated word distances from "short". These are the closest 999 words.
+Below: A histogram of exponentiated word distances from "short". These are the closest 500 words.
 
 ```{r}
 hist(shortdata$expdist)
@@ -97,7 +114,7 @@ hist(widedata$expdist)
 
 
 
-Below: Mean distances of space, time, both and other words from "long". Error bars here and throughout are 95% bootstrapped confidence intervals.
+Below: Mean exponentiated distances of space, time, both and other words from "long". Error bars here and throughout are 95% bootstrapped confidence intervals.
 
 ```{r}
 longmeans %>%
@@ -106,9 +123,18 @@ longmeans %>%
   ggtitle("Average exponentiated distances from long")
 ```
 
+Below: Summed exponentiated distances of space, time, both and other words from "long". Error bars here and throughout are 95% bootstrapped confidence intervals.
+
+```{r}
+longsums %>%
+  ggplot(aes(x = spacetime, y = sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Summed inverse exponentiated distances from long")
+```
 
 
-Below: Mean distances of space, time, both and other words from "short".
+
+Below: Mean exponentiated distances of space, time, both and other words from "short".
 
 ```{r}
 shortmeans %>%
@@ -117,121 +143,114 @@ shortmeans %>%
   ggtitle("Average exponentiated distances from short")
 ```
 
+Below: Summed inverse exponentiateddistances of space, time, both and other words from "short".
+
+```{r}
+shortsums %>%
+  ggplot(aes(x = spacetime, y = sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Summed inverse exponentiated distances from short")
+```
 
 
-Below: Mean distances of space, time, both and other words from "soon".
+
+Below: Mean exponentiated distances of space, time, both and other words from "soon". Note: there were no pure space words for 'soon'.
 
 ```{r}
 soonmeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
-  ggtitle("Average exponentiated distances from soon")
+  ggtitle("Average exponentiated distances from soon") +
+  geom_text(aes(label = n), vjust=-4, size = 6)
+```
+
+Below: Summed exponentiated distances of space, time, both and other words from "soon". Note: there were no pure space words for 'soon'.
+
+```{r}
+soonsums %>%
+  ggplot(aes(x = spacetime, y = sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Summed inverse exponentiated distances from soon") +
+  geom_text(aes(label = n), vjust=-4, size = 6)
 ```
 
 
 
-Below: Mean distances of space, time, both and other words from "wide". Note: there were no pure time words for 'wide'.
+Below: Mean exponentiated distances of space, time, both and other words from "wide". Note: there were no pure time words for 'wide'.
 
 ```{r}
 widemeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
-  ggtitle("Average exponentiated distances from wide")
+  ggtitle("Average exponentiated distances from wide") +
+  geom_text(aes(label = n), vjust=-4, size = 6)
 ```
 
+Below: Summed exponentiated distances of space, time, both and other words from "wide". Note: there were no pure time words for 'wide'.
+
 ```{r}
-# A plot of mean distances of space, time, both and other words from "long" over distance bins.
-# 
-# 
-# longoverdist <- longdata %>%
-#   group_by(distbin, spacetime, word) %>%
-#   summarise(expdist = mean(expdist)) %>%
-#   tidyboot_mean(expdist) 
-# 
-# longoverdist %>%
-#   ggplot(aes(x = distbin, y = empirical_stat, color = spacetime)) +
-#   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
-#   geom_jitter(width = 1)
+widesums %>%
+  ggplot(aes(x = spacetime, y = sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Summed inverse exponentiated distances from wide") +
+  geom_text(aes(label = n), vjust=-4, size = 6)
 ```
 
-```{r}
-# A plot of mean distances of space, time, both and other words from "short" over distance bins.
-# 
-# 
-# shortoverdist <- shortdata %>%
-#   group_by(distbin, spacetime, word) %>%
-#   summarise(dist = mean(distance)) %>%
-#   tidyboot_mean(dist) %>%
-#   mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
-# 
-# shortoverdist %>%
-#   ggplot(aes(x = distbin, y = empirical_stat, color = spacetime)) +
-#   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
-#   geom_jitter(width = 1)
-```
-
-
-
-Below: A plot of mean distances of space, time, both and other words from "long" within the closest 20, 100, and 999 neighbors. The numbers on the plot denote the number of words of that type in that range of neighbors.
+Below: A plot of mean distances of space, time, both and other words from "long" within the closest 20, 100, and 500 neighbors. The numbers on the plot denote the number of words of that type in that range of neighbors.
 
 ```{r}
-longmeans$threshold = "closest 999"
+longmeans$threshold = "closest 500"
 
 longmeans20 <- longdata %>%
   top_n(20, -expdist) %>%
-  group_by(spacetime, word) %>%
-  summarise(expdist = mean(expdist)) %>%
-  tidyboot_mean(expdist) %>%
+  get_means() %>%
   mutate(threshold = "closest 20")
 
-longmeansAll <- longdata %>%
+longmeans100 <- longdata %>%
   top_n(100, -expdist) %>%
-  group_by(spacetime, word) %>%
-  summarise(expdist = mean(expdist)) %>%
-  tidyboot_mean(expdist) %>%
-  mutate(threshold = "closest 100") %>%
+  get_means() %>%
+  mutate(threshold = "closest 100")
+
+longmeansAll <- longmeans100 %>%
   rbind(longmeans20) %>%
   rbind(longmeans) %>%
-  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 999"))) %>%
+  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 500"))) %>%
   mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
-
 
 longmeansAll %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
   facet_wrap(~threshold) +
-  geom_text(aes(label = n), vjust=4.5, size = 6)
+  geom_text(aes(label = n), vjust=-4, size = 6)
 ```
 
 
-Below: A plot of mean distances of space, time, both and other words from "short" within the closest 20, 100, and 999 neighbors.
+Below: A plot of mean distances of space, time, both and other words from "short" within the closest 20, 100, and 500 neighbors.
 
 ```{r}
-shortmeans$threshold = "closest 999"
+shortmeans$threshold = "closest 500"
 
 shortmeans20 <- shortdata %>%
   top_n(20, -expdist) %>%
-  group_by(spacetime, word) %>%
-  summarise(expdist = mean(expdist)) %>%
-  tidyboot_mean(expdist) %>%
+  get_means() %>%
   mutate(threshold = "closest 20")
 
-shortmeansAll <- shortdata %>%
+shortmeans100 <- shortdata %>%
   top_n(100, -expdist) %>%
-  group_by(spacetime, word) %>%
-  summarise(expdist = mean(expdist)) %>%
-  tidyboot_mean(expdist) %>%
-  mutate(threshold = "closest 100") %>%
+  get_means() %>%
+  mutate(threshold = "closest 100")
+
+shortmeansAll <- shortmeans100 %>%
   rbind(shortmeans20) %>%
   rbind(shortmeans) %>%
-  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 999"))) %>%
+  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 500"))) %>%
   mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time"))) 
 
 shortmeansAll %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
   facet_wrap(~threshold) +
-  geom_text(aes(label = n), vjust=5.5, size = 6) 
+  geom_text(aes(label = n), vjust=-4, size = 6) 
 
 ```
 
