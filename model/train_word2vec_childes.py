@@ -8,14 +8,12 @@ from gensim.test.utils import datapath
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+
 FILE_NAMES = []
 
-for year in range(1990,2013):
-  FILE_NAMES.append('text_spoken_kde/w_spok_' + str(year) + '.txt')
-  FILE_NAMES.append('text_fiction_awq/w_fic_' + str(year) + '.txt')
-  FILE_NAMES.append('text_magazine_qkk/w_mag_' + str(year) + '.txt')
+FILE_NAMES.append('child.txt')
 
-read_dir = '/Users/clairebergey/Box/COCA/texts'
+read_dir = '/Users/clairebergey/Documents/spacetime/childes'
 
 exclude = set('@#1234567890()*')
 
@@ -33,4 +31,4 @@ class corpus(object):
 sentences = corpus()
 model = gensim.models.Word2Vec(sentences=sentences)
 
-model.save("coca_word2vec.model")
+model.save("childes_child_word2vec.model")

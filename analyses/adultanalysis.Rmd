@@ -11,13 +11,14 @@ knitr::opts_chunk$set(echo = FALSE)
 library(knitr)
 library(tidyboot)
 library(tidyverse)
+library(here)
 
 theme_set(theme_classic(base_size = 16))
 ```
 
 ```{r message = FALSE}
 # a function to get mean exponentiated distances for word types
-getmeans <- function(data) {
+get_means <- function(data) {
   newdata <- data %>%
     group_by(spacetime, word) %>%
     summarise_at(vars(distance,expdist), mean) %>%
@@ -27,42 +28,38 @@ getmeans <- function(data) {
 }
 ```
 
+```{r message = FALSE}
+# a function to get mean exponentiated distances for word types
+read_data <- function(data) {
+  cleandata <- data %>%
+  mutate(spacetime = ifelse(spacetime == "O", "other",spacetime),
+         spacetime = ifelse(spacetime == "S", "space",spacetime),
+         spacetime = ifelse(spacetime == "T", "time",spacetime),
+         spacetime = ifelse(spacetime == "B", "both",spacetime),
+         spacetime = as_factor(spacetime)) %>%
+  mutate(spacetime = as_factor(spacetime)) %>%
+  mutate(expdist = exp(distance)) %>%
+  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
+  return(cleandata)
+}
+```
+
 ```{r message = FALSE, warning=FALSE}
-longdata <- read_csv("longneighborscoded.csv") %>%
-  mutate(spacetime = as_factor(spacetime)) %>%
-  mutate(expdist = exp(distance)) %>%
-  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
+longdata <- read_data(read_csv(here("neighbors/cocalongneighbors.csv")))
 
-shortdata <- read_csv("shortneighborscoded.csv") %>%
-  mutate(spacetime = ifelse(spacetime == "o", "other",spacetime),
-         spacetime = ifelse(spacetime == "s", "space",spacetime),
-         spacetime = ifelse(spacetime == "t", "time",spacetime),
-         spacetime = ifelse(spacetime == "b", "both",spacetime),
-         spacetime = as_factor(spacetime)) %>%
-  mutate(expdist = exp(distance)) %>%
-  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
+shortdata <- read_data(read_csv(here("neighbors/cocashortneighbors.csv"))) 
 
-widedata <- read_csv("wide.csv") %>%
-  mutate(spacetime = ifelse(spacetime == "o", "other",spacetime),
-         spacetime = ifelse(spacetime == "s", "space",spacetime),
-         spacetime = ifelse(spacetime == "t", "time",spacetime),
-         spacetime = ifelse(spacetime == "b", "both",spacetime),
-         spacetime = as_factor(spacetime)) %>%
-  mutate(expdist = exp(distance)) %>%
-  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
+widedata <- read_data(read_csv(here("neighbors/cocawideneighbors.csv"))) 
 
-soondata <- read_csv("soon.csv") %>%
-  mutate(spacetime = as_factor(spacetime)) %>%
-  mutate(expdist = exp(distance)) %>%
-  mutate(distbin = cut(expdist, breaks = 10, labels = FALSE))
+soondata <- read_data(read_csv(here("neighbors/cocasoonneighbors.csv"))) 
 
-longmeans <- getmeans(longdata)
+longmeans <- get_means(longdata)
 
-shortmeans <- getmeans(shortdata)
+shortmeans <- get_means(shortdata)
 
-soonmeans <- getmeans(soondata)
+soonmeans <- get_means(soondata)
 
-widemeans <- getmeans(widedata)
+widemeans <- get_means(widedata)
 
 ```
 
@@ -105,7 +102,8 @@ Below: Mean distances of space, time, both and other words from "long". Error ba
 ```{r}
 longmeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
-  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Average exponentiated distances from long")
 ```
 
 
@@ -115,7 +113,8 @@ Below: Mean distances of space, time, both and other words from "short".
 ```{r}
 shortmeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
-  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Average exponentiated distances from short")
 ```
 
 
@@ -125,7 +124,8 @@ Below: Mean distances of space, time, both and other words from "soon".
 ```{r}
 soonmeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
-  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Average exponentiated distances from soon")
 ```
 
 
@@ -135,7 +135,8 @@ Below: Mean distances of space, time, both and other words from "wide". Note: th
 ```{r}
 widemeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
-  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper))
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Average exponentiated distances from wide")
 ```
 
 ```{r}
