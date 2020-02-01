@@ -1,4 +1,4 @@
-word, distance, targetword,spacetime
+word,similarity, targetword,spacetime
 adolescently,0.28758975863456726,short,O
 ahead,0.3016647696495056,short,B
 annums,0.3294382095336914,short,T

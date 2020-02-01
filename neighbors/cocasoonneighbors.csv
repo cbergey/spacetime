@@ -1,4 +1,4 @@
-word, distance, targetword,spacetime
+word,similarity, targetword,spacetime
 abruptly,0.45007091760635376,soon,T
 again,0.42038559913635254,soon,T
 awhile,0.33672472834587097,soon,T

@@ -1,4 +1,4 @@
-word, distance, targetword,spacetime
+word,similarity, targetword,spacetime
 above,0.429592102766037,wide,S
 across,0.47006261348724365,wide,B
 angled,0.42712342739105225,wide,S

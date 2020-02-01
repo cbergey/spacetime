@@ -1,0 +1,281 @@
+---
+title: "spacetimeadultanalysis"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r load-libraries, library, message=F, results='hide', warning=FALSE}
+library(knitr)
+library(tidyboot)
+library(tidyverse)
+library(here)
+
+theme_set(theme_classic(base_size = 16))
+```
+
+```{r message = FALSE}
+# a function to get mean similarities for word types
+get_means <- function(data) {
+  newdata <- data %>%
+    group_by(spacetime, word) %>%
+    summarise_at(vars(similarity), mean) %>%
+    tidyboot_mean(similarity) %>%
+    mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time"))) 
+  return(newdata)
+}
+```
+
+```{r message = FALSE}
+# a function to get summed similarities for word types
+get_sums <- function(data) {
+  newdata <- data %>%
+    group_by(spacetime, word) %>%
+    summarise_at(vars(similarity), sum) %>%
+    tidyboot(similarity, summary_function = sum,
+             statistics_functions =  list("ci_lower" = ci_lower,
+                                          "ci_upper" = ci_upper))
+  return(newdata)
+}
+```
+
+```{r message = FALSE}
+# a function to get mean similarities for word types
+read_data <- function(data) {
+  cleandata <- data %>%
+    mutate(spacetime = ifelse(spacetime == "O", "other",spacetime),
+         spacetime = ifelse(spacetime == "S", "space",spacetime),
+         spacetime = ifelse(spacetime == "T", "time",spacetime),
+         spacetime = ifelse(spacetime == "B", "both",spacetime),
+         spacetime = as_factor(spacetime)) %>%
+    mutate(spacetime = as_factor(spacetime)) %>%
+    mutate(similarity = as.numeric(similarity)) 
+  return(cleandata)
+}
+```
+
+```{r message = FALSE, warning=FALSE}
+longdata <- read_data(read_csv(here("neighbors/cocalongneighbors.csv")))
+
+shortdata <- read_data(read_csv(here("neighbors/cocashortneighbors.csv"))) 
+
+widedata <- read_data(read_csv(here("neighbors/cocawideneighbors.csv"))) 
+
+soondata <- read_data(read_csv(here("neighbors/cocasoonneighbors.csv"))) 
+```
+
+
+
+```{r}
+longmeans <- get_means(longdata)
+shortmeans <- get_means(shortdata)
+soonmeans <- get_means(soondata)
+widemeans <- get_means(widedata)
+
+longsums <- get_sums(longdata)
+shortsums <- get_sums(shortdata)
+soonsums <- get_sums(soondata)
+widesums <- get_sums(widedata)
+```
+
+Below: A histogram of word similarities to "long".
+
+```{r}
+hist(longdata$similarity)
+```
+
+
+
+Below: A histogram of word similarities to "short".
+
+```{r}
+hist(shortdata$similarity)
+```
+
+
+
+Below: A histogram of word similarities to "soon".
+
+```{r}
+hist(soondata$similarity)
+```
+
+
+
+Below: A histogram of word similarities to "wide".
+
+```{r}
+hist(widedata$similarity)
+```
+
+
+
+Below: Mean similarities of space, time, both and other words to "long". Error bars here and throughout are 95% bootstrapped confidence intervals.
+
+```{r}
+longmeans %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Average similarities to long")
+```
+
+Below: Summed similarities of space, time, both and other words to "long". Error bars here and throughout are 95% bootstrapped confidence intervals.
+
+```{r}
+longsums %>%
+  ggplot(aes(x = spacetime, y = empirical_sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Summed similarities to long")
+```
+
+
+
+Below: Mean similarities of space, time, both and other words to "short".
+
+```{r}
+shortmeans %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Average similarities to short")
+```
+
+Below: Summed similarities of space, time, both and other words to "short".
+
+```{r}
+shortsums %>%
+  ggplot(aes(x = spacetime, y = empirical_sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Summed similarities to short")
+```
+
+
+
+Below: Mean similarities of space, time, both and other words to "soon". Note: there were no pure space words for 'soon'.
+
+```{r}
+soonmeans %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Average similarities to soon") +
+  geom_text(aes(label = n), vjust=-4, size = 6)
+```
+
+Below: Summed similarities of space, time, both and other words to "soon". Note: there were no pure space words for 'soon'.
+
+```{r}
+soonsums %>%
+  ggplot(aes(x = spacetime, y = empirical_sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Summed similarities to soon") +
+  geom_text(aes(label = n), vjust=-4, size = 6)
+```
+
+
+
+Below: Mean similarities of space, time, both and other words to "wide". Note: there were no pure time words for 'wide'.
+
+```{r}
+widemeans %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Average similarities to wide") +
+  geom_text(aes(label = n), vjust=-4, size = 6)
+```
+
+Below: Summed similarities of space, time, both and other words to "wide". Note: there were no pure time words for 'wide'.
+
+```{r}
+widesums %>%
+  ggplot(aes(x = spacetime, y = sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  ggtitle("Summed similarities to wide") +
+  geom_text(aes(label = n), vjust=-4, size = 6)
+```
+
+Below: A plot of mean similarities of space, time, both and other words to "long" within the closest 20, 100, and 500 neighbors. The numbers on the plot denote the number of words of that type in that range of neighbors.
+
+```{r}
+longmeans$threshold = "closest 500"
+
+longmeans20 <- longdata %>%
+  top_n(20, similarity) %>%
+  get_means() %>%
+  mutate(threshold = "closest 20")
+
+longmeans100 <- longdata %>%
+  top_n(100, similarity) %>%
+  get_means() %>%
+  mutate(threshold = "closest 100")
+
+longmeansAll <- longmeans100 %>%
+  rbind(longmeans20) %>%
+  rbind(longmeans) %>%
+  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 500"))) %>%
+  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+
+longmeansAll %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~threshold) +
+  geom_text(aes(label = n), vjust=-4, size = 6)
+```
+
+
+Below: A plot of mean similarities of space, time, both and other words to "short" within the closest 20, 100, and 500 neighbors.
+
+```{r}
+shortmeans$threshold = "closest 500"
+
+shortmeans20 <- shortdata %>%
+  top_n(20, similarity) %>%
+  get_means() %>%
+  mutate(threshold = "closest 20")
+
+shortmeans100 <- shortdata %>%
+  top_n(100, similarity) %>%
+  get_means() %>%
+  mutate(threshold = "closest 100")
+
+shortmeansAll <- shortmeans100 %>%
+  rbind(shortmeans20) %>%
+  rbind(shortmeans) %>%
+  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 500"))) %>%
+  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time"))) 
+
+shortmeansAll %>%
+  ggplot(aes(x = spacetime, y = empirical_stat)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~threshold) +
+  geom_text(aes(label = n), vjust=-4, size = 6) 
+
+```
+
+
+
+Below: Linear model predicting similarity to "long" by word type (space, time, etc.) in the most similar 100 words, where we're more likely to see differences. Space is the reference category. 
+
+```{r}
+longmodeldata <- longdata %>%
+  top_n(100, similarity) %>%
+  mutate(spacetime = relevel(spacetime, ref = 'space'))
+         
+longmodel <- glm(similarity ~ spacetime, family = gaussian, data = longmodeldata)
+
+summary(longmodel)
+```
+
+
+
+Below: Linear model predicting similarity to "short" by word type (space, time, etc.) in the most similar 100 words, where we're more likely to see differences. Space is the reference category. 
+
+```{r}
+shortmodeldata <- shortdata %>%
+  top_n(100, similarity) %>%
+  mutate(spacetime = relevel(spacetime, ref = 'space'))
+         
+shortmodel <- glm(similarity ~ spacetime, family = gaussian, data = shortmodeldata)
+
+summary(shortmodel)
+```

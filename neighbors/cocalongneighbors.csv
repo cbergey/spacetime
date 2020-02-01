@@ -1,4 +1,4 @@
-word, distance, targetword,spacetime
+word,similarity, targetword,spacetime
 abbass,0.24876669049263,long,O
 adolescently,0.302700400352478,long,O
 aeons,0.297715425491333,long,T

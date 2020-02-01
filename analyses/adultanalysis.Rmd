@@ -34,9 +34,9 @@ get_sums <- function(data) {
   newdata <- data %>%
     group_by(spacetime, word) %>%
     summarise_at(vars(inversedist), sum) %>%
-    tidyboot(inversedist, summary_function = sum(inversedist), 
+    tidyboot(inversedist, summary_function = sum,
              statistics_functions =  list("ci_lower" = ci_lower,
-                                          "sum" = mean,
+                                          "sum" = sum,
                                           "ci_upper" = ci_upper))
   return(newdata)
 }
@@ -60,13 +60,13 @@ read_data <- function(data) {
 ```
 
 ```{r message = FALSE, warning=FALSE}
-longdata <- read_data(read_csv(here("neighbors/cocalongneighbors.csv")))
+longdata <- read_data(read_csv(here("neighbors/preliminary_data/longneighborscoded.csv")))
 
-shortdata <- read_data(read_csv(here("neighbors/cocashortneighbors.csv"))) 
+shortdata <- read_data(read_csv(here("neighbors/preliminary_data/shortneighborscoded.csv"))) 
 
-widedata <- read_data(read_csv(here("neighbors/cocawideneighbors.csv"))) 
+widedata <- read_data(read_csv(here("neighbors/preliminary_data/wide.csv"))) 
 
-soondata <- read_data(read_csv(here("neighbors/cocasoonneighbors.csv"))) 
+soondata <- read_data(read_csv(here("neighbors/preliminary_data/soon.csv"))) 
 
 longmeans <- get_means(longdata)
 shortmeans <- get_means(shortdata)
