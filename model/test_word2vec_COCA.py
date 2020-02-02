@@ -5,8 +5,6 @@ from gensim import utils
 import gensim.models
 import gensim.models.word2vec
 from gensim.test.utils import datapath
-import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 from sklearn.decomposition import IncrementalPCA    
 from sklearn.manifold import TSNE                   
 import numpy as np   
