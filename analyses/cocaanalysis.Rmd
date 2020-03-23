@@ -127,7 +127,7 @@ Below: Summed similarities of space, time, both and other words to "long". Error
 longsums %>%
   ggplot(aes(x = spacetime, y = empirical_sum)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
-  ggtitle("Summed similarities to long")
+  ggtitle("Summed neighbors weighted by similarity to long")
 ```
 
 
@@ -147,7 +147,7 @@ Below: Summed similarities of space, time, both and other words to "short".
 shortsums %>%
   ggplot(aes(x = spacetime, y = empirical_sum)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
-  ggtitle("Summed similarities to short")
+  ggtitle("Summed neighbors weighted by similarity to short")
 ```
 
 
@@ -168,7 +168,7 @@ Below: Summed similarities of space, time, both and other words to "soon". Note:
 soonsums %>%
   ggplot(aes(x = spacetime, y = empirical_sum)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
-  ggtitle("Summed similarities to soon") +
+  ggtitle("Summed neighbors weighted by similarity to soon") +
   geom_text(aes(label = n), vjust=-4, size = 6)
 ```
 
@@ -190,7 +190,7 @@ Below: Summed similarities of space, time, both and other words to "wide". Note:
 widesums %>%
   ggplot(aes(x = spacetime, y = empirical_sum)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
-  ggtitle("Summed similarities to wide") +
+  ggtitle("Summed neighbors weighted by similarity to wide") +
   geom_text(aes(label = n), vjust=-4, size = 6)
 ```
 
@@ -306,9 +306,9 @@ empiricalValues <- longdata %>%
   group_by(spacetime) %>%
   count()
 
-observedSpace <- getSpace(empiricalValues)
-observedTime <- getTime(empiricalValues)
-observedDiff <- getDiff(empiricalValues)
+observedSpaceLong <- getSpace(empiricalValues)
+observedTimeLong <- getTime(empiricalValues)
+observedDiffLong <- getDiff(empiricalValues)
 ```
 
 Below: Empirical values for the number of space words, the number of time words and the difference between the two within the first 100 nearest neigbors of short  
@@ -365,10 +365,15 @@ nullDiffDF <- data.frame(nullDiff)
 ```{r}
 ggplot(nullTimeDF, aes(x=nullTime)) +
   geom_histogram() +
-  geom_vline(xintercept = observedTime, linetype="dotted", 
+  geom_vline(xintercept = observedTimeLong, linetype="dotted", 
                 color = "blue", size=1.5) +
   geom_vline(xintercept = observedTimeShort, linetype="dotted", 
-                color = "green", size=1.5)
+                color = "green", size=1.5) + 
+  theme_classic() +
+  geom_text(aes(x=observedTimeLong, label="long", y=4000), 
+            colour="blue", text=element_text(size=11)) +
+  geom_text(aes(x=observedTimeShort, label="short", y=4000), 
+            colour="green", text=element_text(size=11))
 ```
 
 
@@ -376,20 +381,28 @@ ggplot(nullTimeDF, aes(x=nullTime)) +
 ```{r}
 ggplot(nullSpaceDF, aes(x=nullSpace)) +
   geom_histogram() +
-  geom_vline(xintercept = observedSpace, linetype="dotted", 
+  geom_vline(xintercept = observedSpaceLong, linetype="dotted", 
                 color = "blue", size=1.5) +
   geom_vline(xintercept = observedSpaceShort, linetype="dotted", 
-                color = "green", size=1.5)
+                color = "green", size=1.5) +
+  geom_text(aes(x=observedSpaceLong, label="long", y=4000), 
+            colour="blue", text=element_text(size=11)) +
+  geom_text(aes(x=observedSpaceShort, label="short", y=4000), 
+            colour="green", text=element_text(size=11))
 ```
 
 
 ```{r}
   ggplot(nullDiffDF, aes(x=nullDiff)) +
   geom_histogram() +
-  geom_vline(xintercept = observedDiff, linetype="dotted", 
+  geom_vline(xintercept = observedDiffLong, linetype="dotted", 
                 color = "blue", size=1.5) +
     geom_vline(xintercept = observedDiffShort, linetype="dotted", 
-                color = "green", size=1.5)
+                color = "green", size=1.5) +
+  geom_text(aes(x=observedDiffLong, label="long", y=4000), 
+            colour="blue", text=element_text(size=11)) +
+  geom_text(aes(x=observedDiffShort, label="short", y=4000), 
+            colour="green", text=element_text(size=11))
 ```
 
 
@@ -404,9 +417,9 @@ empiricalValues500 <- longdata %>%
   group_by(spacetime) %>%
   count()
 
-observedSpace500 <- getSpace(empiricalValues500)
-observedTime500 <- getTime(empiricalValues500)
-observedDiff500 <- getDiff(empiricalValues500)
+observedSpaceLong500 <- getSpace(empiricalValues500)
+observedTimeLong500 <- getTime(empiricalValues500)
+observedDiffLong500 <- getDiff(empiricalValues500)
 ```
 
 Below: Empirical values for the number of space words, the number of time words and the difference between the two within the first 500 nearest neigbors of short  
@@ -453,7 +466,7 @@ nullDiffDF500 <- data.frame(nullDiff500)
 ```{r}
 ggplot(nullTimeDF500, aes(x=nullTime500)) +
   geom_histogram() +
-  geom_vline(xintercept = observedTime500, linetype="dotted", 
+  geom_vline(xintercept = observedTimeLong500, linetype="dotted", 
                 color = "blue", size=1.5) +
   geom_vline(xintercept = observedTimeShort500, linetype="dotted", 
                 color = "green", size=1.5) +
@@ -470,7 +483,7 @@ ggplot(nullTimeDF500, aes(x=nullTime500)) +
 ```{r}
 ggplot(nullSpaceDF500, aes(x=nullSpace500)) +
   geom_histogram() +
-  geom_vline(xintercept = observedSpace500, linetype="dotted", 
+  geom_vline(xintercept = observedSpaceLong500, linetype="dotted", 
                 color = "blue", size=1.5) +
   geom_vline(xintercept = observedSpaceShort500, linetype="dotted", 
                 color = "green", size=1.5) +
@@ -484,7 +497,7 @@ ggplot(nullSpaceDF500, aes(x=nullSpace500)) +
 ```{r}
 ggplot(nullDiffDF500, aes(x=nullDiff500)) +
   geom_histogram() +
-  geom_vline(xintercept = observedDiff500, linetype="dotted", 
+  geom_vline(xintercept = observedDiffLong500, linetype="dotted", 
                 color = "blue", size=1.5) +
   geom_vline(xintercept = observedDiffShort500, linetype="dotted", 
                 color = "green", size=1.5) +
@@ -502,9 +515,9 @@ Stats for long with samples N=500
 For long
 
 ```{r}
-mean(nullDiffDF500 >= observedDiff500)
-mean(nullTimeDF500 >= observedTime500)
-mean(nullSpaceDF500 >= observedSpace500)
+mean(nullDiffDF500 >= observedDiffLong500)
+mean(nullTimeDF500 >= observedTimeLong500)
+mean(nullSpaceDF500 >= observedSpaceLong500)
 ```
 
 For short
