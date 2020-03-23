@@ -41,8 +41,8 @@ get_sums <- function(data) {
 }
 ```
 
+
 ```{r message = FALSE}
-# a function to get mean similarities for word types
 read_data <- function(data) {
   cleandata <- data %>%
     mutate(spacetime = ifelse(spacetime == "O", "other",spacetime),
@@ -188,7 +188,7 @@ Below: Summed similarities of space, time, both and other words to "wide". Note:
 
 ```{r}
 widesums %>%
-  ggplot(aes(x = spacetime, y = sum)) +
+  ggplot(aes(x = spacetime, y = empirical_sum)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
   ggtitle("Summed similarities to wide") +
   geom_text(aes(label = n), vjust=-4, size = 6)
@@ -279,3 +279,240 @@ shortmodel <- glm(similarity ~ spacetime, family = gaussian, data = shortmodelda
 
 summary(shortmodel)
 ```
+
+Functions to get the counts
+
+```{r}
+getSpace <- function(data){
+  return(as.numeric(data$n[data$spacetime == "space"]))
+}
+
+getTime <- function(data){
+  return(as.numeric(data$n[data$spacetime == "time"]))
+}
+
+getDiff <- function(data){
+  return(as.numeric(data$n[data$spacetime == "time"] - data$n[data$spacetime == "space"]))
+}
+
+```
+
+
+Below: Empirical values for the number of space words, the number of time words and the difference between the two within the first 100 nearest neigbors of long.  
+
+```{r}
+empiricalValues <- longdata %>%
+  top_n(100, similarity) %>%
+  group_by(spacetime) %>%
+  count()
+
+observedSpace <- getSpace(empiricalValues)
+observedTime <- getTime(empiricalValues)
+observedDiff <- getDiff(empiricalValues)
+```
+
+Below: Empirical values for the number of space words, the number of time words and the difference between the two within the first 100 nearest neigbors of short  
+
+```{r}
+empiricalValuesShort <- shortdata %>%
+  top_n(100, similarity) %>%
+  group_by(spacetime) %>%
+  count()
+
+observedSpaceShort <- getSpace(empiricalValuesShort)
+observedTimeShort <- getTime(empiricalValuesShort)
+observedDiffShort <- getDiff(empiricalValuesShort)
+```
+
+
+Below: Bootstrapping (n=100) samples of number of space words, time words, and their difference from the sample of 6000 random words.
+
+Import the random sample from the corpus with 6000 words. 
+
+```{r message = FALSE}
+null_data <- read_csv(here("neighbors/random_words.csv")) %>%
+    mutate(spacetime = ifelse(is.na(spacetime), "other", spacetime)) %>%
+    mutate(spacetime = as_factor(spacetime)) 
+```
+
+
+Generate the null distribution for number of space words, time words, and their difference. 
+
+```{r}
+set.seed(185)
+
+sampleData <- as.data.frame(rep(0, 100))
+
+simulate_null <- function(getX) {
+    sampleData <- mutate(sampleData, spacetime = sample(null_data$spacetime, size = 100, replace=TRUE))
+    sampledValues <- sampleData %>%
+      group_by(spacetime, .drop = FALSE) %>%
+      count() 
+  return(getX(sampledValues))
+}
+
+nullSpace <- replicate(10000, simulate_null(getSpace)) 
+nullTime <- replicate(10000, simulate_null(getTime))  
+nullDiff <- replicate(10000, simulate_null(getDiff)) 
+
+nullSpaceDF <- data.frame(nullSpace)
+nullTimeDF <- data.frame(nullTime)
+nullDiffDF <- data.frame(nullDiff)
+```
+
+
+
+```{r}
+ggplot(nullTimeDF, aes(x=nullTime)) +
+  geom_histogram() +
+  geom_vline(xintercept = observedTime, linetype="dotted", 
+                color = "blue", size=1.5) +
+  geom_vline(xintercept = observedTimeShort, linetype="dotted", 
+                color = "green", size=1.5)
+```
+
+
+
+```{r}
+ggplot(nullSpaceDF, aes(x=nullSpace)) +
+  geom_histogram() +
+  geom_vline(xintercept = observedSpace, linetype="dotted", 
+                color = "blue", size=1.5) +
+  geom_vline(xintercept = observedSpaceShort, linetype="dotted", 
+                color = "green", size=1.5)
+```
+
+
+```{r}
+  ggplot(nullDiffDF, aes(x=nullDiff)) +
+  geom_histogram() +
+  geom_vline(xintercept = observedDiff, linetype="dotted", 
+                color = "blue", size=1.5) +
+    geom_vline(xintercept = observedDiffShort, linetype="dotted", 
+                color = "green", size=1.5)
+```
+
+
+Below: Same analyses with the 500 observed sample and bootstrapped samples with N=500
+
+
+Below: Empirical values for the number of space words, the number of time words and the difference between the two within the first 500 nearest neigbors of long.  
+
+```{r}
+empiricalValues500 <- longdata %>%
+  top_n(500, similarity) %>%
+  group_by(spacetime) %>%
+  count()
+
+observedSpace500 <- getSpace(empiricalValues500)
+observedTime500 <- getTime(empiricalValues500)
+observedDiff500 <- getDiff(empiricalValues500)
+```
+
+Below: Empirical values for the number of space words, the number of time words and the difference between the two within the first 500 nearest neigbors of short  
+
+```{r}
+empiricalValuesShort500 <- shortdata %>%
+  top_n(500, similarity) %>%
+  group_by(spacetime) %>%
+  count()
+
+observedSpaceShort500 <- getSpace(empiricalValuesShort500)
+observedTimeShort500 <- getTime(empiricalValuesShort500)
+observedDiffShort500 <- getDiff(empiricalValuesShort500)
+```
+
+
+Generate the null distribution for number of space words, time words, and their difference -- samples with n = 500
+
+```{r}
+set.seed(188)
+
+sampleData <- as.data.frame(rep(0, 500))
+
+simulate_null <- function(getX) {
+    sampleData <- mutate(sampleData, spacetime = sample(null_data$spacetime, size = 500, replace=TRUE))
+    sampledValues <- sampleData %>%
+      group_by(spacetime, .drop = FALSE) %>%
+      count() 
+  return(getX(sampledValues))
+}
+
+nullSpace500 <- replicate(10000, simulate_null(getSpace)) 
+nullTime500 <- replicate(10000, simulate_null(getTime))  
+nullDiff500 <- replicate(10000, simulate_null(getDiff)) 
+
+nullSpaceDF500 <- data.frame(nullSpace500)
+nullTimeDF500 <- data.frame(nullTime500)
+nullDiffDF500 <- data.frame(nullDiff500)
+```
+
+
+
+
+```{r}
+ggplot(nullTimeDF500, aes(x=nullTime500)) +
+  geom_histogram() +
+  geom_vline(xintercept = observedTime500, linetype="dotted", 
+                color = "blue", size=1.5) +
+  geom_vline(xintercept = observedTimeShort500, linetype="dotted", 
+                color = "green", size=1.5) +
+  theme_classic() +
+  labs(x = "Number of time words", y = "Count among 10000 samples") +
+  #ggtitle("Observed value of number of ") + 
+  geom_text(aes(x=68, label="long", y=4000), colour="blue", text=element_text(size=11))+
+  geom_text(aes(x=43, label="short", y=4000), colour="green", text=element_text(size=11))
+
+  
+```
+
+
+```{r}
+ggplot(nullSpaceDF500, aes(x=nullSpace500)) +
+  geom_histogram() +
+  geom_vline(xintercept = observedSpace500, linetype="dotted", 
+                color = "blue", size=1.5) +
+  geom_vline(xintercept = observedSpaceShort500, linetype="dotted", 
+                color = "green", size=1.5) +
+  theme_classic() +
+  labs(x = "Number of space words", y = "Count among 10000 samples") +
+  #ggtitle("Observed value of number of ") + 
+  geom_text(aes(x=24, label="long", y=4000), colour="blue", text=element_text(size=11)) +
+  geom_text(aes(x=35, label="short", y=4000), colour="green", text=element_text(size=11))
+```
+
+```{r}
+ggplot(nullDiffDF500, aes(x=nullDiff500)) +
+  geom_histogram() +
+  geom_vline(xintercept = observedDiff500, linetype="dotted", 
+                color = "blue", size=1.5) +
+  geom_vline(xintercept = observedDiffShort500, linetype="dotted", 
+                color = "green", size=1.5) +
+ theme_classic() +
+  labs(x = "Number of time words minus number of space words", y = "Count among 10000 samples") +
+  #ggtitle("Observed value of number of ") + 
+  geom_text(aes(x=42, label="long", y=4000), colour="blue", text=element_text(size=20)) +
+  geom_text(aes(x=6, label="short", y=4000), colour="green", text=element_text(size=20)) +
+  theme(axis.text=element_text(size=14),
+          axis.title=element_text(size=16)) 
+```
+
+Stats for long with samples N=500
+
+For long
+
+```{r}
+mean(nullDiffDF500 >= observedDiff500)
+mean(nullTimeDF500 >= observedTime500)
+mean(nullSpaceDF500 >= observedSpace500)
+```
+
+For short
+
+```{r}
+mean(nullDiffDF500 >= observedDiffShort500)
+mean(nullTimeDF500 >= observedTimeShort500)
+mean(nullSpaceDF500 >= observedSpaceShort500)
+```
+
+
