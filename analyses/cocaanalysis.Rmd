@@ -159,7 +159,9 @@ soonmeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
   ggtitle("Average similarities to soon") +
-  geom_text(aes(label = n), vjust=-4, size = 6)
+  geom_text(aes(label = n), vjust=-4, size = 6) +
+  labs(x = "Word type of the neighbor", y = "Average similarity") 
+
 ```
 
 Below: Summed similarities of space, time, both and other words to "soon". Note: there were no pure space words for 'soon'.
@@ -181,7 +183,9 @@ widemeans %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
   ggtitle("Average similarities to wide") +
-  geom_text(aes(label = n), vjust=-4, size = 6)
+  geom_text(aes(label = n), vjust=-4, size = 6) +
+  labs(x = "Word type of the neighbor", y = "Average similarity") 
+
 ```
 
 Below: Summed similarities of space, time, both and other words to "wide". Note: there were no pure time words for 'wide'.
@@ -219,7 +223,10 @@ longmeansAll %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
   facet_wrap(~threshold) +
-  geom_text(aes(label = n), vjust=-4, size = 6)
+  geom_text(aes(label = n), vjust=-4, size = 6) +
+  ggtitle("Average similarity of space, time, both and other words \nto 'long' within the closest 20, 100, and 500 neighbors") +
+  labs(x = "Word type of the neighbor", y = "Average similarity to 'long'") 
+
 ```
 
 
@@ -248,11 +255,74 @@ shortmeansAll %>%
   ggplot(aes(x = spacetime, y = empirical_stat)) +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
   facet_wrap(~threshold) +
-  geom_text(aes(label = n), vjust=-4, size = 6) 
-
+  geom_text(aes(label = n), vjust=-4, size = 6) +
+  ggtitle("Average similarity of space, time, both and other words \nto 'short' within the closest 20, 100, and 500 neighbors") +
+  labs(x = "Word type of the neighbor", y = "Average similarity to 'short'") 
 ```
 
 
+
+Below: A plot of weighted sums of space, time, both and other words for "long" within the closest 20, 100, and 500 neighbors. The numbers on the plot denote the number of words of that type in that range of neighbors.
+
+```{r}
+longsums$threshold = "closest 500"
+
+longsums20 <- longdata %>%
+  top_n(20, similarity) %>%
+  get_sums() %>%
+  mutate(threshold = "closest 20")
+
+longsums100 <- longdata %>%
+  top_n(100, similarity) %>%
+  get_sums() %>%
+  mutate(threshold = "closest 100")
+
+longsumsAll <- longsums100 %>%
+  rbind(longsums20) %>%
+  rbind(longsums) %>%
+  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 500"))) %>%
+  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+
+longsumsAll %>%
+  ggplot(aes(x = spacetime, y = empirical_sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~threshold) +
+  geom_text(aes(label = n), vjust=-4, size = 6) +
+  ggtitle("Weighted sum of space, time, both and other words \nfor 'long' within the closest 20, 100, and 500 neighbors") +
+  labs(x = "Word type of the neighbor", y = "Weighted sum for 'long'") 
+
+```
+
+Below: A plot of weighted sums of space, time, both and other words for "short" within the closest 20, 100, and 500 neighbors. The numbers on the plot denote the number of words of that type in that range of neighbors.
+
+```{r}
+shortsums$threshold = "closest 500"
+
+shortsums20 <- shortdata %>%
+  top_n(20, similarity) %>%
+  get_sums() %>%
+  mutate(threshold = "closest 20")
+
+shortsums100 <- shortdata %>%
+  top_n(100, similarity) %>%
+  get_sums() %>%
+  mutate(threshold = "closest 100")
+
+shortsumsAll <- shortsums100 %>%
+  rbind(shortsums20) %>%
+  rbind(shortsums) %>%
+  mutate(threshold = factor(threshold, levels = c("closest 20", "closest 100", "closest 500"))) %>%
+  mutate(spacetime = factor(spacetime, levels = c("other", "both", "space", "time")))
+
+shortsumsAll %>%
+  ggplot(aes(x = spacetime, y = empirical_sum)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~threshold) +
+  geom_text(aes(label = n), vjust=-4, size = 6) +
+  ggtitle("Weighted sum of space, time, both and other words \nfor 'short' within the closest 20, 100, and 500 neighbors") +
+  labs(x = "Word type of the neighbor", y = "Weighted sum for 'short'") 
+
+```
 
 Below: Linear model predicting similarity to "long" by word type (space, time, etc.) in the most similar 100 words, where we're more likely to see differences. Space is the reference category. 
 
@@ -370,10 +440,12 @@ ggplot(nullTimeDF, aes(x=nullTime)) +
   geom_vline(xintercept = observedTimeShort, linetype="dotted", 
                 color = "green", size=1.5) + 
   theme_classic() +
-  geom_text(aes(x=observedTimeLong, label="long", y=4000), 
+  geom_text(aes(x=observedTimeLong, label="observed count \nfor long", y=4000), 
             colour="blue", text=element_text(size=11)) +
-  geom_text(aes(x=observedTimeShort, label="short", y=4000), 
-            colour="green", text=element_text(size=11))
+  geom_text(aes(x=observedTimeShort, label="observed count \nfor short", y=4000), 
+            colour="green", text=element_text(size=11)) +
+  ggtitle("Null distribution for the number of time words in samples of 100") +
+  labs(x = "Number of time words (out of 100)", y = "Number of samples") 
 ```
 
 
@@ -385,10 +457,12 @@ ggplot(nullSpaceDF, aes(x=nullSpace)) +
                 color = "blue", size=1.5) +
   geom_vline(xintercept = observedSpaceShort, linetype="dotted", 
                 color = "green", size=1.5) +
-  geom_text(aes(x=observedSpaceLong, label="long", y=4000), 
+  geom_text(aes(x=observedSpaceLong, label="observed count \nfor long", y=4000), 
             colour="blue", text=element_text(size=11)) +
-  geom_text(aes(x=observedSpaceShort, label="short", y=4000), 
-            colour="green", text=element_text(size=11))
+  geom_text(aes(x=observedSpaceShort, label="observed count \nfor short", y=4000), 
+            colour="green", text=element_text(size=11)) +
+  ggtitle("Null distribution for the number of space words \nin samples of 100") +
+  labs(x = "Number of space words (out of 100)", y = "Number of samples") 
 ```
 
 
@@ -399,10 +473,13 @@ ggplot(nullSpaceDF, aes(x=nullSpace)) +
                 color = "blue", size=1.5) +
     geom_vline(xintercept = observedDiffShort, linetype="dotted", 
                 color = "green", size=1.5) +
-  geom_text(aes(x=observedDiffLong, label="long", y=4000), 
+  geom_text(aes(x=observedDiffLong, label="observed count \nfor long", y=4000), 
             colour="blue", text=element_text(size=11)) +
-  geom_text(aes(x=observedDiffShort, label="short", y=4000), 
-            colour="green", text=element_text(size=11))
+  geom_text(aes(x=observedDiffShort, label="observed count \nfor short", y=4000), 
+            colour="green", text=element_text(size=11)) +
+  ggtitle("Null distribution for the difference in the number of \ntime words and space words in samples of 100") +
+  labs(x = "Number of time - number of space words (out of 100)", y = "Number of samples") 
+
 ```
 
 
@@ -471,11 +548,11 @@ ggplot(nullTimeDF500, aes(x=nullTime500)) +
   geom_vline(xintercept = observedTimeShort500, linetype="dotted", 
                 color = "green", size=1.5) +
   theme_classic() +
-  labs(x = "Number of time words", y = "Count among 10000 samples") +
   #ggtitle("Observed value of number of ") + 
-  geom_text(aes(x=68, label="long", y=4000), colour="blue", text=element_text(size=11))+
-  geom_text(aes(x=43, label="short", y=4000), colour="green", text=element_text(size=11))
-
+  geom_text(aes(x=68, label="observed count \nfor long", y=4000), colour="blue", text=element_text(size=11))+
+  geom_text(aes(x=43, label="observed count \nfor short", y=4000), colour="green", text=element_text(size=11)) +
+  ggtitle("Null distribution for the difference in the number of time words in samples of 500") +
+  labs(x = "Number of time words (out of 500)", y = "Number of samples") 
   
 ```
 
@@ -490,8 +567,11 @@ ggplot(nullSpaceDF500, aes(x=nullSpace500)) +
   theme_classic() +
   labs(x = "Number of space words", y = "Count among 10000 samples") +
   #ggtitle("Observed value of number of ") + 
-  geom_text(aes(x=24, label="long", y=4000), colour="blue", text=element_text(size=11)) +
-  geom_text(aes(x=35, label="short", y=4000), colour="green", text=element_text(size=11))
+  geom_text(aes(x=24, label="observed count \nfor long", y=4000), colour="blue", text=element_text(size=11)) +
+  geom_text(aes(x=35, label="observed count \nfor short", y=4000), colour="green", text=element_text(size=11)) +
+  ggtitle("Null distribution for the difference in the number of space words in samples of 500") +
+  labs(x = "Number of space words (out of 500)", y = "Number of samples") 
+
 ```
 
 ```{r}
@@ -502,12 +582,15 @@ ggplot(nullDiffDF500, aes(x=nullDiff500)) +
   geom_vline(xintercept = observedDiffShort500, linetype="dotted", 
                 color = "green", size=1.5) +
  theme_classic() +
-  labs(x = "Number of time words minus number of space words", y = "Count among 10000 samples") +
+  #labs(x = "Number of time words minus number of space words", y = "Count among 10000 samples") +
   #ggtitle("Observed value of number of ") + 
-  geom_text(aes(x=42, label="long", y=4000), colour="blue", text=element_text(size=20)) +
-  geom_text(aes(x=6, label="short", y=4000), colour="green", text=element_text(size=20)) +
+  geom_text(aes(x=42, label="observed count \nfor long", y=4000), colour="blue", text=element_text(size=20)) +
+  geom_text(aes(x=6, label="observed count \nfor short", y=4000), colour="green", text=element_text(size=20)) +
   theme(axis.text=element_text(size=14),
-          axis.title=element_text(size=16)) 
+          axis.title=element_text(size=16))  +
+  ggtitle("Null distribution for the difference in the number of time words and space words \nin samples of 500") +
+  labs(x = "Number of time - number of space words (out of 500)", y = "Number of samples") 
+
 ```
 
 Stats for long with samples N=500
