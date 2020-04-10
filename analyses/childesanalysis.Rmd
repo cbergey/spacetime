@@ -251,10 +251,10 @@ observedDiffShort <- getDiff(empiricalValuesShort)
 
 Below: Bootstrapping (n=100) samples of number of space words, time words, and their difference from the sample of 6000 random words.
 
-Import the random sample from the corpus with 6000 words. 
+Import the random sample from the corpus with 3000 words. 
 
 ```{r message = FALSE}
-null_data <- read_csv(here("neighbors/random_words.csv")) %>%
+null_data <- read_csv(here("neighbors/random_words_childes.csv")) %>%
     mutate(spacetime = ifelse(is.na(spacetime), "other", spacetime)) %>%
     mutate(spacetime = as_factor(spacetime)) 
 ```
