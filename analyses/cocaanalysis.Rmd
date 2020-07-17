@@ -591,3 +591,57 @@ mean(nullSpaceDF500 >= observedSpaceShort500)
 ```
 
 
+<font size="4">Plots for CogSci 2020 poster</font>
+
+
+
+```{r}
+newNull100 <- nullDiffDF %>%
+  mutate(sampleSize = "n100") %>%
+  rename(diffScore = nullDiff)
+
+newNull500 <- nullDiffDF500 %>%
+  mutate(sampleSize = "n500") %>%
+  rename(diffScore = nullDiff500)
+
+bootDifference <- newNull100 %>%
+  rbind(newNull500)
+
+
+data_summary <- function(x) {
+   m <- mean(x)
+   ymin <- min(x)
+   ymax <- max(x)
+   return(c(y=m,ymin=ymin,ymax=ymax))
+}
+
+word <- c("long","short","long","short", "wide", "soon")
+sampleSize <- c('n100', 'n100', 'n500', 'n500', 'n100', 'n100')
+#Getting the difference score for wide and soon from their df's
+diffScore <- c(observedDiffLong, observedDiffShort, observedDiffLong500, observedDiffShort500, -as.numeric(widesums[1,2]), as.numeric(soonsums[1,2]))
+# Join the variables to create a data frame
+observedDiff <- data.frame(word,sampleSize,diffScore)
+
+
+p <- ggplot() +
+  stat_summary(data=bootDifference, aes(x= sampleSize, y = diffScore), fun.data=data_summary, color="wheat3") +
+  geom_point(data=observedDiff, aes(x= sampleSize, y = diffScore, color=word), size=3, shape=3) +
+  geom_text(data=observedDiff, label=word, hjust=2, aes(x= sampleSize, y = diffScore, color=word)) +
+  theme_classic() +
+  theme(text = element_text(size = 14)) +
+  labs(x= "Sample size", y = "More spatial                       More temporal") +
+  theme(legend.position = "none") +
+  #to make the graph transparent
+    theme(
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.grid.major = element_blank(), # get rid of major grid
+    panel.grid.minor = element_blank(), # get rid of minor grid
+    legend.background = element_rect(fill = "transparent"), # get rid of legend bg
+    legend.box.background = element_rect(fill = "transparent") # get rid of legend panel bg
+  )
+
+ggsave(p, filename = "spacetime_CogSci2020_Figure2.png", width=7, height =5, bg = "transparent")
+
+```
+
