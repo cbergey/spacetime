@@ -624,13 +624,18 @@ observedDiff <- data.frame(word,sampleSize,diffScore)
 
 
 p <- ggplot() +
-  stat_summary(data=bootDifference, aes(x= sampleSize, y = diffScore), fun.data=data_summary, color="wheat3") +
-  geom_point(data=observedDiff, aes(x= sampleSize, y = diffScore, color=word), size=3, shape=3) +
-  geom_text(data=observedDiff, label=word, hjust=2, aes(x= sampleSize, y = diffScore, color=word)) +
+  stat_summary(data=bootDifference, aes(x= sampleSize, y = diffScore), fun.data=data_summary, color="wheat3", size=0.5) +
+  geom_point(data=observedDiff, aes(x= sampleSize, y = diffScore, color=word), size=4, shape=3, color = "#663366") +
+  geom_text(data=observedDiff, label=word, hjust=2, aes(x= sampleSize, y = diffScore), color="#663366") +
   theme_classic() +
-  theme(text = element_text(size = 14)) +
-  labs(x= "Sample size", y = "More spatial                       More temporal") +
+  theme(text = element_text(size = 14, colour = "white", face="bold")) +
+  labs(x= "Number of neighbors", y = "More spatial               More temporal") +
+  scale_x_discrete(labels = c('Closest 100 \nneighbors', 'Closest 500 \nneighbors')) +
   theme(legend.position = "none") +
+  theme(axis.line = element_line(size = 0.5, colour = "white"),
+        axis.text.x = element_text(color = "white"),
+        axis.text.y = element_text(color = "white"),
+        axis.ticks = element_line(color = "white", size  =  0.2)) +
   #to make the graph transparent
     theme(
     panel.background = element_rect(fill = "transparent"), # bg of the panel
@@ -638,10 +643,10 @@ p <- ggplot() +
     panel.grid.major = element_blank(), # get rid of major grid
     panel.grid.minor = element_blank(), # get rid of minor grid
     legend.background = element_rect(fill = "transparent"), # get rid of legend bg
-    legend.box.background = element_rect(fill = "transparent") # get rid of legend panel bg
+    legend.box.background = element_rect(fill = "transparent"), # get rid of legend panel bg
   )
 
-ggsave(p, filename = "spacetime_CogSci2020_Figure2.png", width=7, height =5, bg = "transparent")
+ggsave(p, filename = "spacetime_CogSci2020_Figure2.png", width=4, height =4, bg = "transparent")
 
 ```
 
