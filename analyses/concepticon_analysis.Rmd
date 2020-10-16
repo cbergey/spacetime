@@ -1,0 +1,52 @@
+---
+title: "concepticon-analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-libraries, library, message=F, results='hide', warning=FALSE}
+library(knitr)
+library(tidyboot)
+library(tidyverse)
+library(childesr)
+library(here)
+library(reticulate)
+use_condaenv("r-reticulate")
+theme_set(theme_classic(base_size = 16))
+```
+
+```{r load-libraries, library, message=F, results='hide', warning=FALSE}
+types <- get_types(collection = "Eng-NA") 
+
+parent_types <- types %>%
+  mutate(gloss = str_to_lower(gloss)) %>%
+  filter(speaker_role == "Mother" | speaker_role == "Father") %>%
+  group_by(gloss) %>%
+  summarise(sum = sum(count)) 
+```
+
+```{r}
+concepticon_list <- read_csv(here("data/concepticon_words.csv")) %>%
+  mutate(exclude = if_else(is.na(exclude), FALSE, TRUE),
+         concept = str_to_lower(concept),
+         concept = str_replace(concept, " \\(.*\\)", ""),
+         domain = if_else(SemanticField == "Time", "time", "space")) 
+         
+concepticon_list <- concepticon_list %>%
+  left_join(parent_types, by = c("concept" = "gloss")) %>%
+  rename(parent_tokens = sum) %>%
+  filter(exclude == FALSE) %>%
+  select(domain, concept, parent_tokens) 
+
+top_concepts <- concepticon_list %>%
+  arrange(desc(parent_tokens)) %>%
+  group_by(domain) %>% slice(1:20)
+```
+
+```{r }
+
+
+```

@@ -1,0 +1,294 @@
+SemanticField,concept,exclude,ExclusionCriteria
+Time,MIDDAY,,
+Time,JUST,,
+Time,AGAIN,,
+Time,LONG AGO,X,multiple words
+Time,ONE TIME,X,multiple words
+Time,FOR A LONG TIME,X,multiple words
+Time,BE LATE,X,multiple words
+Time,HARMATTAN,,
+Time,DRY SEASON,X,multiple words
+Time,RAINY SEASON,X,multiple words
+Time,LATE,,
+Time,PERIOD,,
+Time,THIS YEAR,X,multiple words
+Time,LAST YEAR,X,multiple words
+Time,NEXT YEAR,X,multiple words
+Time,YOUNG (OF WOMAN),X,duplicate
+Time,YOUNG (OF MAN),X,duplicate
+Time,OLD (OF MAN),X,duplicate
+Time,OLD (OF WOMAN),X,duplicate
+Time,EARLY,,
+Time,SEASON,,
+Time,SLOW,,
+Time,SOON,,
+Time,WHILE,,
+Time,DAWN,,
+Time,END (OF TIME),X,spatial
+Time,HURRY,,
+Time,READY,,
+Time,TIME,,
+Time,YESTERDAY,,
+Time,DAY AFTER TOMORROW,X,multiple words
+Time,DAY BEFORE YESTERDAY,X,multiple words
+Time,LAST (ENDURE),X,spatial
+Time,YOUNG,,
+Time,DAY (NOT NIGHT),X,duplicate
+Time,YEAR,,
+Time,OLD,,
+Time,NEW,,
+Time,NIGHT,,
+Time,DAY (24 HOURS),,
+Time,AUTUMN,,
+Time,TODAY,,
+Time,CLOCK,,
+Time,TOMORROW,,
+Time,MORNING,,
+Time,SUMMER,,
+Time,HOUR,,
+Time,MONTH,,
+Time,NOW,,
+Time,WEEK,,
+Time,WINTER,,
+Time,SPRINGTIME,,
+Time,SOMETIMES,,
+Time,BEGINNING,X,spatial
+Time,EVENING,,
+Time,FAST,,
+Time,NEVER,,
+Time,ALWAYS,,
+Time,FRIDAY,,
+Time,THURSDAY,,
+Time,WEDNESDAY,,
+Time,TUESDAY,,
+Time,MONDAY,,
+Time,SUNDAY,,
+Time,SATURDAY,,
+Time,FINISH,,
+Time,AGE,,
+Time,BEGIN,,
+Time,AFTERNOON,,
+Time,OFTEN,,
+Time,BEFORE,X,spatial
+Time,CEASE,,
+Time,PASS,X,spatial
+Time,IMMEDIATELY,,
+Time,JANUARY,,
+Time,FEBRUARY,,
+Time,AFTERWARDS,,
+Time,NOW OR TODAY,X,multiple words
+Time,BE DEAD OR DIE,X,multiple words
+Time,OLD (AGED),X,duplicate
+Time,OLD (USED),X,duplicate
+Time,ARRIVE (OF AN EVENT),X,spatial
+Time,PERHAPS,,
+Time,SUNSET,,
+Time,SUNRISE,,
+Time,DUSK,,
+Time,YEAR AFTER NEXT YEAR,X,multiple words
+Time,YEAR BEFORE LAST YEAR,X,multiple words
+Time,THREE DAYS FROM NOW,X,multiple words
+Time,THREE DAYS BEFORE NOW,X,multiple words
+Time,HOW LONG,X,multiple words
+Time,NOON,,
+Time,ALREADY,,
+Time,YET,,
+Time,MIDNIGHT,,
+Time,UNTIL,,
+Time,BUSY,,
+Time,IDLE,,
+Time,FORENOON,,
+Time,THIS MONTH,X,multiple words
+Time,LAST MONTH,X,multiple words
+Time,NEXT MONTH,X,multiple words
+Time,TOMORROW OR YESTERDAY,X,multiple words
+Time,MARCH,,
+Time,APRIL,,
+Time,MAY (MONTH),X,other prominent meaning
+Time,JUNE,,
+Time,JULY,,
+Time,AUGUST,,
+Time,SEPTEMBER,,
+Time,OCTOBER,,
+Time,NOVEMBER,,
+Time,DECEMBER,,
+Time,ONCE (IN THE PAST),,
+Time,AT FIRST,X,multiple words
+Time,INSTANTLY (IMMEDIATELY),,
+Time,STILL (CONTINUING),X,spatial
+Time,SUDDENLY,,
+Time,THEN,,
+Time,AT THAT TIME,X,multiple words
+Time,FORMER,,
+Time,HOT SEASON,X,multiple words
+Time,FOUR DAYS FROM NOW,X,multiple words
+Time,FOUR DAYS BEFORE NOW,X,multiple words
+Time,SHORT (TIME),X,spatial
+Time,MONSOON SEASON,X,multiple words
+Time,AUTUMN OR HARVEST SEASON,X,multiple words
+Time,WRISTWATCH,,
+Time,THIRD DAY OF THE MONTH,X,multiple words
+Time,FIRST DAY OF THE MONTH,X,multiple words
+Time,SECOND DAY OF THE MONTH,X,multiple words
+Time,BEGIN OR START,X,multiple words
+Time,START,X,spatial
+Spatial relations,GATHER,,
+Spatial relations,ATOP,,
+Spatial relations,FATHOM,,
+Spatial relations,CORNER,,
+Spatial relations,SHALLOW,,
+Spatial relations,LIE DOWN,X,multiple words
+Spatial relations,LEFT,X,"other prominent meaning, temporal"
+Spatial relations,CROOKED,,
+Spatial relations,PICK UP,X,multiple words
+Spatial relations,POINTED,,
+Spatial relations,GROW,X,temporal
+Spatial relations,CENTER,,
+Spatial relations,CLOSED,,
+Spatial relations,HIDE (CONCEAL),X,duplicate
+Spatial relations,SIDE,,
+Spatial relations,BETWEEN,X,temporal
+Spatial relations,FROM,X,temporal
+Spatial relations,TALL,,
+Spatial relations,LOW,,
+Spatial relations,PLACE (POSITION),,
+Spatial relations,END (OF SPACE),X,temporal
+Spatial relations,COVER,,
+Spatial relations,OUTSIDE,,
+Spatial relations,REMAINS,X,temporal
+Spatial relations,SQUARE,,
+Spatial relations,EDGE,,
+Spatial relations,REMAIN,X,temporal
+Spatial relations,PUT,,
+Spatial relations,RIGHT,X,other prominent meaning
+Spatial relations,SHUT,,
+Spatial relations,LINE,,
+Spatial relations,HOOK,,
+Spatial relations,MIDDLE,X,temporal
+Spatial relations,DIVIDE,X,temporal
+Spatial relations,OPEN,X,temporal
+Spatial relations,BIG,,
+Spatial relations,LONG,X,temporal
+Spatial relations,WIDE,,
+Spatial relations,THICK,,
+Spatial relations,SMALL,,
+Spatial relations,CHANGE,X,temporal
+Spatial relations,HIGH,,
+Spatial relations,NARROW,,
+Spatial relations,FAT (OBESE),,
+Spatial relations,DOWN,,
+Spatial relations,SEPARATE,,
+Spatial relations,CROSS,,
+Spatial relations,ROUND,,
+Spatial relations,THIN (SLIM),X,duplicate
+Spatial relations,STRAIGHT,,
+Spatial relations,FAR,X,temporal
+Spatial relations,LIE (REST),X,other prominent meaning
+Spatial relations,SIT,,
+Spatial relations,STAND,,
+Spatial relations,IN,X,temporal
+Spatial relations,AT,X,temporal
+Spatial relations,CIRCLE,,
+Spatial relations,BELOW OR UNDER,X,multiple words
+Spatial relations,BELOW,,
+Spatial relations,UNDER,X,temporal
+Spatial relations,MEASURE,X,temporal
+Spatial relations,SIMILAR,X,other prominent meaning
+Spatial relations,PILE UP,X,multiple words
+Spatial relations,UP,,
+Spatial relations,DEEP,,
+Spatial relations,SOUTH,,
+Spatial relations,NORTH,,
+Spatial relations,INSIDE,,
+Spatial relations,FLAT,,
+Spatial relations,SHORT,X,temporal
+Spatial relations,INSTEAD,X,other prominent meaning
+Spatial relations,HOLE,,
+Spatial relations,AFTER,X,temporal
+Spatial relations,BEHIND,X,temporal
+Spatial relations,ABOVE,,
+Spatial relations,JOIN,X,other prominent meaning
+Spatial relations,TOP,,
+Spatial relations,RESEMBLE,X,other prominent meaning
+Spatial relations,BESIDE,,
+Spatial relations,WEST,,
+Spatial relations,BALL,X,other prominent meaning
+Spatial relations,EAST,,
+Spatial relations,IN FRONT OF,X,multiple words
+Spatial relations,NEAR,X,temporal
+Spatial relations,DOWN OR BELOW,X,multiple words
+Spatial relations,LONG OR TALL,X,multiple words
+Spatial relations,COARSE,,
+Spatial relations,FINE OR THIN,X,multiple words
+Spatial relations,LOW (HEIGHT),X,duplicate
+Spatial relations,FRONT (PART),X,duplicate
+Spatial relations,LOWER PART,X,multiple words
+Spatial relations,LEDGE,,
+Spatial relations,PEAK,,
+Spatial relations,DENSE,,
+Spatial relations,THIN (OF SHAPE OF OBJECT),X,duplicate
+Spatial relations,LEAF (LEAFLIKE OBJECT),X,other prominent meaning
+Spatial relations,IDENTICAL,X,other prominent meaning
+Spatial relations,WHOLE,,
+Spatial relations,CIRCULAR (ROUND IN TWO DIMENSIONS),,
+Spatial relations,SPHERICAL (ROUND IN THREE DIMENSIONS),,
+Spatial relations,THIN (OF HAIR AND THREAD),X,duplicate
+Spatial relations,THIN (OF LEAF AND CLOTH),X,duplicate
+Spatial relations,THIN (OF HAIR AND LEAF),X,duplicate
+Spatial relations,THIN,,
+Spatial relations,BACK (PART),X,temporal
+Spatial relations,VERTICAL,,
+Spatial relations,HORIZONTAL,,
+Spatial relations,UP OR ABOVE,X,duplicate
+Spatial relations,TOGETHER,,
+Spatial relations,SMALL (NOT TALL),X,duplicate
+Spatial relations,HIDE (ONESELF),X,duplicate
+Spatial relations,HIDE,,
+Spatial relations,SIZE,,
+Spatial relations,SIZE (OF PERSON),X,duplicate
+Spatial relations,BROAD,,
+Spatial relations,DEPTH,,
+Spatial relations,ALTITUDE,,
+Spatial relations,BREADTH,,
+Spatial relations,LENGTH,X,temporal
+Spatial relations,BROAD OR WIDE,X,duplicate
+Spatial relations,ACROSS,,
+Spatial relations,STEEP,,
+Spatial relations,TOWARDS,X,temporal
+Spatial relations,ANGULAR (SQUAREFORMED),,
+Spatial relations,HIGH OR TALL,X,duplicate
+Spatial relations,SIZE (OF OBJECT),X,duplicate
+Spatial relations,CHANGE (SOMETHING),X,"duplicate, temporal"
+Spatial relations,CHANGE (BECOME DIFFERENT),X,"duplicate, temporal"
+Spatial relations,STREAM (FLOW CONTINUOUSLY),,
+Spatial relations,BACK (DIRECTION),X,"duplicate, temporal"
+Spatial relations,BACKWARD,X,temporal
+Spatial relations,FORWARD,X,temporal
+Spatial relations,NEXT TO,X,multiple words
+Spatial relations,THITHER (THERE TO),,
+Spatial relations,HITHER (HERE TO),,
+Spatial relations,FROM HERE,X,multiple words
+Spatial relations,WHITHER (WHERE TO),,
+Spatial relations,GAP (DISTANCE),X,temporal
+Spatial relations,DISTANCE,X,temporal
+Spatial relations,HEIGHT,,
+Spatial relations,FRINGE,,
+Spatial relations,TIP (OF OBJECT),,
+Spatial relations,SUPPORT (OF OBJECT),,
+Spatial relations,EVERYWHERE,,
+Spatial relations,SPACE (AVAILABLE),,
+Spatial relations,SLANTED,,
+Spatial relations,BE LEFT,X,multiple words
+Spatial relations,CENTER OR MIDDLE,X,multiple words
+Spatial relations,POINT (POINTED END),X,temporal
+Spatial relations,ATOP OR UP,X,duplicate
+Spatial relations,TALL (PERSON),X,duplicate
+Spatial relations,HIGH OR UP,X,multiple words
+Spatial relations,LOW (POSITION OR HEIGHT),X,duplicate
+Spatial relations,OVER HERE,X,multiple words
+Spatial relations,OVER THERE,X,multiple words
+Spatial relations,DIRECTION,,
+Spatial relations,TAKE OUT,X,multiple words
+Spatial relations,LENGTHEN,X,temporal
+Spatial relations,HOLLOW,,
+Spatial relations,NEAR (IN SPACE),X,"duplicate, temporal"
