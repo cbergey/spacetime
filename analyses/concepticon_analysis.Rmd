@@ -29,6 +29,10 @@ parent_types <- types %>%
 ```
 
 ```{r}
+# NOTE: excluded "shortest" because it doesn't happen enough in childes to have a representation
+childes_target_words = c("long","longer","longest","short","shorter")
+coca_target_words = c("long","longer","longest","short","shorter","shortest")
+
 concepticon_list <- read_csv(here("data/concepticon_words.csv")) %>%
   mutate(exclude = if_else(is.na(exclude), FALSE, TRUE),
          concept = str_to_lower(concept),
@@ -44,9 +48,67 @@ concepticon_list <- concepticon_list %>%
 top_concepts <- concepticon_list %>%
   arrange(desc(parent_tokens)) %>%
   group_by(domain) %>% slice(1:20)
+
+childes_pairs <- cross(list(top_concepts$concept, childes_target_words))
+coca_pairs <- cross(list(top_concepts$concept, coca_target_words))
+
+childes_read_dir = here("model/trained_models/childes_adult_word2vec.model")
+coca_read_dir = here("model/trained_models/coca_word2vec.model")
 ```
 
-```{r }
+```{python get-distances}
+from gensim import utils
+import gensim.models
+import gensim.models.word2vec
+from gensim.test.utils import datapath
+childes_model = gensim.models.Word2Vec.load(r.childes_read_dir)
+coca_model = gensim.models.Word2Vec.load(r.coca_read_dir)
+childes_dict = {}
+coca_dict = {}
 
+for word, target_word in r.childes_pairs:
+   childes_dict[word + " " + target_word] = childes_model.wv.similarity(word, target_word)
+   
+for word, target_word in r.coca_pairs:
+   coca_dict[word + " " + target_word] = coca_model.wv.similarity(word, target_word)
+
+```
+
+```{r}
+childes_sims <- py$childes_dict %>%
+  as.data.frame() %>% t() %>% as.data.frame()%>%
+  rownames_to_column() %>%
+  dplyr::rename(name = rowname, distance = V1) %>%
+  mutate(word = sub("\\..*", "", name), target_word = sub(".*\\.", "", name)) %>%
+  select(word, target_word, distance) %>%
+  left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept"))
+
+coca_sims <- py$coca_dict %>%
+  as.data.frame() %>% t() %>% as.data.frame()%>%
+  rownames_to_column() %>%
+  dplyr::rename(name = rowname, distance = V1) %>%
+  mutate(word = sub("\\..*", "", name), target_word = sub(".*\\.", "", name)) %>%
+  select(word, target_word, distance) %>%
+  left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept"))
+```
+
+```{r}
+childes_sims %>%
+  group_by(target_word, domain) %>%
+  tidyboot_mean(distance) %>%
+  ggplot() +
+  geom_pointrange(aes(x = target_word, y = empirical_stat, 
+                      ymin = ci_lower, ymax = ci_upper,
+                      color = domain),
+                  position = position_dodge(width = 0.5)) 
+
+coca_sims %>%
+  group_by(target_word, domain) %>%
+  tidyboot_mean(distance) %>%
+  ggplot() +
+  geom_pointrange(aes(x = target_word, y = empirical_stat, 
+                      ymin = ci_lower, ymax = ci_upper,
+                      color = domain),
+                  position = position_dodge(width = 0.5)) 
 
 ```
