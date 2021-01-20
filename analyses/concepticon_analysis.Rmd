@@ -32,7 +32,7 @@ parent_types <- types %>%
   summarise(sum = sum(count)) 
 ```
 
-```{python get-coca-vocab}
+```{python}
 from gensim import utils
 import gensim.models
 import gensim.models.word2vec
@@ -40,23 +40,31 @@ from gensim.test.utils import datapath
 childes_model = gensim.models.Word2Vec.load(r.childes_read_dir)
 coca_model = gensim.models.Word2Vec.load(r.coca_read_dir)
 coca_vocabulary = coca_model.wv.vocab
+
 ```
 
-```{r word-lists}
+```{r set-seed}
 set.seed(111)
 
 # NOTE: excluded "shortest" because it doesn't happen enough in childes to have a representation
-childes_target_words = c("long","longer","longest","short","shorter", "soon", "wide")
-coca_target_words = c("long","longer","longest","short","shorter","shortest", "soon", "wide")
+childes_target_words = c("long","longer","longest","short","shorter")
+coca_target_words = c("long","longer","longest","short","shorter","shortest")
+```
 
-coca_vocab = unlist(py$coca_vocabulary) %>%
-  t() %>% as.data.frame() %>% t() %>% as.data.frame() %>%
-  rownames_to_column() %>% select(-V1) %>% rename("word" = "rowname")
+```{r preprocessing}
+coca_vocab <- unlist(py$coca_vocabulary) %>% as.list() 
+coca_vocab <- names(coca_vocab)
+coca_vocab <- as_tibble(coca_vocab)
+
+#coca_vocab <- py$coca_vocabulary %>% as.data.frame()
+
+colnames(coca_vocab) = c("word")
 
 childes_random_words <- read_csv(here("data/childes_random_words.csv")) %>%
   left_join(parent_types, by = c("word" = "gloss")) %>%
   filter(sum >= 50, !(word %in% coca_target_words), word %in% coca_vocab$word) %>%
   sample_n(500)
+
 
 concepticon_list <- read_csv(here("data/concepticon_words.csv")) %>%
   mutate(exclude = if_else(is.na(exclude), FALSE, TRUE),
@@ -81,7 +89,7 @@ coca_random_pairs <- cross(list(top_concepts$concept, childes_random_words$word)
 space_time_pairs <- combn(top_concepts$concept, 2, simplify = FALSE)
 ```
 
-```{python get-distances}
+```{python}
 from gensim import utils
 import gensim.models
 import gensim.models.word2vec
@@ -110,57 +118,49 @@ for word, target_word in r.coca_pairs:
 for word, target_word in r.space_time_pairs:
    space_time_childes_dict[word + " " + target_word] = childes_model.wv.similarity(word, target_word)
    space_time_coca_dict[word + " " + target_word] = coca_model.wv.similarity(word, target_word)
-
 ```
 
 ```{r process-sims}
-childes_sims <- py$childes_dict %>%
-  as.data.frame() %>% t() %>% as.data.frame()%>%
-  rownames_to_column() %>%
-  dplyr::rename(name = rowname, distance = V1) %>%
-  mutate(word = sub("\\..*", "", name), target_word = sub(".*\\.", "", name)) %>%
+childes_sims <- py$childes_dict %>% unlist() %>% as.list() %>% as_tibble() %>%
+  t() %>% as_tibble(rownames = "name") 
+
+
+
+#
+colnames(childes_sims) = c("name", "distance")
+#  
+childes_sims <- childes_sims %>%
+  mutate(word = gsub(" .*$", "", name), target_word = gsub(".* ", "", name)) %>%
+  select(word, target_word, distance) %>%
+  left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept"))
+```
+
+```{r}
+childes_random_sims <- py$childes_random_dict %>% unlist() %>% as.list() %>% as_tibble() %>%
+  t() %>% as_tibble(rownames = "name") %>%
+  dplyr::rename(distance = V1) %>%
+  mutate(word = gsub(" .*$", "", name), target_word = gsub(".* ", "", name)) %>%
+  select(word, target_word, distance) %>%
+  left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept")) 
+
+coca_sims <- py$coca_dict %>%unlist() %>% as.list() %>% as_tibble() %>%
+  t() %>% as_tibble(rownames = "name") %>%
+  dplyr::rename(distance = V1) %>%
+  mutate(word = gsub(" .*$", "", name), target_word = gsub(".* ", "", name)) %>%
   select(word, target_word, distance) %>%
   left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept"))
 
-childes_random_sims <- py$childes_random_dict %>%
-  as.data.frame() %>% t() %>% as.data.frame()%>%
-  rownames_to_column() %>%
-  dplyr::rename(name = rowname, distance = V1) %>%
-  mutate(word = sub("\\..*", "", name), target_word = sub(".*\\.", "", name)) %>%
+coca_random_sims <- py$coca_random_dict %>%unlist() %>% as.list() %>% as_tibble() %>%
+  t() %>% as_tibble(rownames = "name") %>%
+  dplyr::rename(distance = V1) %>%
+  mutate(word = gsub(" .*$", "", name), target_word = gsub(".* ", "", name)) %>%
   select(word, target_word, distance) %>%
-  left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept")) %>%
-  group_by(target_word, domain) %>%
-  summarise(mean_word_dist = mean(distance)) %>%
-  ungroup() %>%
-  group_by(domain) %>%
-  tidyboot_mean(mean_word_dist) 
+  left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept")) 
 
-coca_sims <- py$coca_dict %>%
-  as.data.frame() %>% t() %>% as.data.frame()%>%
-  rownames_to_column() %>%
-  dplyr::rename(name = rowname, distance = V1) %>%
-  mutate(word = sub("\\..*", "", name), target_word = sub(".*\\.", "", name)) %>%
-  select(word, target_word, distance) %>%
-  left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept"))
-
-coca_random_sims <- py$coca_random_dict %>%
-  as.data.frame() %>% t() %>% as.data.frame()%>%
-  rownames_to_column() %>%
-  dplyr::rename(name = rowname, distance = V1) %>%
-  mutate(word = sub("\\..*", "", name), target_word = sub(".*\\.", "", name)) %>%
-  select(word, target_word, distance) %>%
-  left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept")) %>%
-  group_by(target_word, domain) %>%
-  summarise(mean_word_dist = mean(distance)) %>%
-  ungroup() %>%
-  group_by(domain) %>%
-  tidyboot_mean(mean_word_dist) 
-
-st_childes <- py$space_time_childes_dict %>%
-  as.data.frame() %>% t() %>% as.data.frame() %>%
-  rownames_to_column() %>%
-  dplyr::rename(name = rowname, distance = V1) %>%
-  mutate(word = sub("\\..*", "", name), target_word = sub(".*\\.", "", name)) %>%
+st_childes <- py$space_time_childes_dict %>% unlist() %>% as.list() %>% as_tibble() %>%
+  t() %>% as_tibble(rownames = "name") %>%
+  dplyr::rename(distance = V1) %>%
+  mutate(word = gsub(" .*$", "", name), target_word = gsub(".* ", "", name)) %>%
   select(word, target_word, distance) %>%
   left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept")) %>%
   rename("word_domain" = "domain") %>%
@@ -173,11 +173,10 @@ st_childes <- py$space_time_childes_dict %>%
                                     word_domain != target_word_domain ~ "between_space_time"
                                     ))
 
-st_coca <- py$space_time_coca_dict %>%
-  as.data.frame() %>% t() %>% as.data.frame() %>%
-  rownames_to_column() %>%
-  dplyr::rename(name = rowname, distance = V1) %>%
-  mutate(word = sub("\\..*", "", name), target_word = sub(".*\\.", "", name)) %>%
+st_coca <- py$space_time_coca_dict %>% unlist() %>% as.list() %>% as_tibble() %>%
+  t() %>% as_tibble(rownames = "name") %>%
+  dplyr::rename(distance = V1) %>%
+  mutate(word = gsub(" .*$", "", name), target_word = gsub(".* ", "", name)) %>%
   select(word, target_word, distance) %>%
   left_join(top_concepts %>% select(domain, concept), by = c("word" = "concept")) %>%
   rename("word_domain" = "domain") %>%
@@ -203,35 +202,119 @@ between_within_childes <- st_childes %>%
                             within_between == "within_space" ~ "space"))
 ```
 
-```{r childes-plot}
-childes_sims %>%
-  group_by(target_word, domain) %>%
-  tidyboot_mean(distance) %>%
-  rbind(childes_random_sims %>% mutate(target_word = "null")) %>%
-  rbind(between_within_childes %>% mutate(target_word = within_between) %>% 
-          filter(within_between != "between_space_time")) %>%
+```{r get-CIs}
+get_difference_CIs <- function(data) {
+  data <- data %>%
+    summarise(sd = sd(distance), mean = mean(distance), n = n()) %>%
+    pivot_wider(names_from = domain, 
+                values_from = c(mean, sd, n)) %>% 
+    mutate(space_time_diff = mean_space - mean_time,
+           se_diff = sqrt((sd_space^2)/n_space + (sd_time^2)/n_time),
+           diff_ci_upper = space_time_diff + 1.96*se_diff,
+           diff_ci_lower = space_time_diff - 1.96*se_diff) %>%
+    ungroup() 
+  return(data)
+}
+
+get_difference_CIs_within_between <- function(data) {
+  data <- data %>%
+    summarise(sd = sd(distance), mean = mean(distance), n = n()) %>%
+    pivot_wider(names_from = within_between, 
+                values_from = c(mean, sd, n)) %>% 
+    mutate(time_diff = mean_between_space_time - mean_within_time,
+           space_diff = mean_within_space - mean_between_space_time,
+           se_time_diff = sqrt((sd_between_space_time^2)/n_between_space_time +
+                                 (sd_within_time^2)/n_within_time),
+           se_space_diff = sqrt((sd_within_space^2)/n_within_space +
+                                 (sd_between_space_time^2)/n_between_space_time),
+           time_diff_ci_upper = time_diff + 1.96*se_time_diff,
+           time_diff_ci_lower = time_diff - 1.96*se_time_diff,
+           space_diff_ci_upper = space_diff + 1.96*se_space_diff,
+           space_diff_ci_lower = space_diff - 1.96*se_space_diff) %>%
+    ungroup()
+  return(data)
+}
+```
+
+```{r get_diff_sims}
+childes_target_diffs <- childes_sims %>% 
+  group_by(target_word, domain) %>% get_difference_CIs() %>%
+  select(target_word, space_time_diff, diff_ci_lower, diff_ci_upper)
+
+childes_random_diffs <- childes_random_sims %>% group_by(domain) %>% 
+  get_difference_CIs() %>%
+  select(space_time_diff, diff_ci_lower, diff_ci_upper) %>%
+  mutate(target_word = "null")
+
+childes_between_within_diffs <- st_childes %>% group_by(within_between) %>% 
+  get_difference_CIs_within_between() %>% 
+  select((contains("time_diff") | contains("space_diff")) &
+         !contains("se_")) %>%
+  pivot_longer(cols = starts_with("time") | starts_with("space"),
+               names_to = c("word", "stat"),
+               names_pattern = "([A-Za-z]+)_([A-Za-z_]+)",
+               values_to = "value") %>%
+  pivot_wider(names_from = stat, values_from = value) %>%
+  rename("target_word" = "word", "space_time_diff" = "diff")
+
+coca_target_diffs <- coca_sims %>% 
+  group_by(target_word, domain) %>% get_difference_CIs() %>%
+  select(target_word, space_time_diff, diff_ci_lower, diff_ci_upper)
+
+coca_random_diffs <- coca_random_sims %>% group_by(domain) %>% 
+  get_difference_CIs() %>%
+  select(space_time_diff, diff_ci_lower, diff_ci_upper) %>%
+  mutate(target_word = "null")
+
+coca_between_within_diffs <- st_coca %>% group_by(within_between) %>% 
+  get_difference_CIs_within_between() %>% 
+  select((contains("time_diff") | contains("space_diff")) &
+         !contains("se_")) %>%
+  pivot_longer(cols = starts_with("time") | starts_with("space"),
+               names_to = c("word", "stat"),
+               names_pattern = "([A-Za-z]+)_([A-Za-z_]+)",
+               values_to = "value") %>%
+  pivot_wider(names_from = stat, values_from = value) %>%
+  rename("target_word" = "word", "space_time_diff" = "diff")
+```
+
+```{r childes_plot}
+
+childes_null <- rbind(childes_target_diffs, 
+              childes_random_diffs, childes_between_within_diffs) %>%
+  filter(target_word == "null")
+  
+rbind(childes_target_diffs, childes_random_diffs, childes_between_within_diffs) %>%
+  filter(target_word != "null") %>%
+  mutate(target_word = factor(target_word, 
+                                 levels = c("time", "space",
+                                           "short","shorter","long","longer",
+                                           "longest"))) %>%
   ggplot() +
-  geom_pointrange(aes(x = target_word, y = empirical_stat, 
-                      ymin = ci_lower, ymax = ci_upper,
-                      color = domain),
-                  position = position_dodge(width = 0.5)) 
+  geom_pointrange(aes(y = target_word, x = space_time_diff, 
+                      xmin = diff_ci_lower, xmax = diff_ci_upper),
+                  position = position_dodge(width = 0.5)) +
+  geom_vline(xintercept = childes_null$space_time_diff, color = "orange") 
 ```
 
 CHILDES mean similarities between target words and space/time words.
 
 ```{r coca-plot}
 
-coca_sims %>%
-  group_by(target_word, domain) %>%
-  tidyboot_mean(distance) %>%
-  rbind(coca_random_sims %>% mutate(target_word = "null")) %>%
-  rbind(between_within_childes %>% mutate(target_word = within_between) %>% 
-          filter(within_between != "between_space_time")) %>%
+coca_null <- rbind(coca_target_diffs, coca_random_diffs, coca_between_within_diffs) %>%
+  filter(target_word == "null") 
+
+rbind(coca_target_diffs, coca_random_diffs, coca_between_within_diffs) %>%
+  filter(target_word != "null") %>%
+  mutate(target_word = factor(target_word, 
+                                 levels = c("time", "space",
+                                           "short","shorter", "shortest",
+                                           "long","longer", "longest"))) %>%
   ggplot() +
-  geom_pointrange(aes(x = target_word, y = empirical_stat, 
-                      ymin = ci_lower, ymax = ci_upper,
-                      color = domain),
-                  position = position_dodge(width = 0.5)) 
+  geom_pointrange(aes(y = target_word, x = space_time_diff, 
+                      xmin = diff_ci_lower, xmax = diff_ci_upper),
+                  position = position_dodge(width = 0.5)) +
+  geom_vline(xintercept = coca_null$space_time_diff, color = "orange") 
 
 ```
 
