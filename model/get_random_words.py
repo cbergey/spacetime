@@ -8,17 +8,17 @@ from gensim.test.utils import datapath
 import numpy as np   
 import csv
 
-model = gensim.models.Word2Vec.load("trained_models/coca_word2vec.model")
+model = gensim.models.Word2Vec.load("trained_models/childes_adult_word2vec.model")
 
 max = len(model.wv.vocab) - 1
 words = []
-for i in range(0, 3):
+for i in range(0, 3000):
     thisword = model.wv.index2word[np.random.randint(0, max)]
     words.append(thisword)
     print(thisword)
 
-# with open('random_words_2.csv', 'w') as csvfile:
-#     writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-#     writer.writerow(["word"])
-#     for word in words:
-#         writer.writerow([word])
+with open('childes_random_words.csv', 'w') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(["word"])
+    for word in words:
+        writer.writerow([word])

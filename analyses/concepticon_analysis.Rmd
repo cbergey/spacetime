@@ -1,10 +1,10 @@
 ---
 title: "concepticon-analysis"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, fig.width = 10)
 ```
 
 ```{r load-libraries, library, message=F, results='hide', warning=FALSE}
@@ -40,8 +40,9 @@ from gensim.test.utils import datapath
 childes_model = gensim.models.Word2Vec.load(r.childes_read_dir)
 coca_model = gensim.models.Word2Vec.load(r.coca_read_dir)
 coca_vocabulary = coca_model.wv.vocab
-
 ```
+
+
 
 ```{r set-seed}
 set.seed(111)
@@ -278,7 +279,7 @@ coca_between_within_diffs <- st_coca %>% group_by(within_between) %>%
   rename("target_word" = "word", "space_time_diff" = "diff")
 ```
 
-```{r childes_plot}
+```{r childes_plot, fig.width = 7}
 
 childes_null <- rbind(childes_target_diffs, 
               childes_random_diffs, childes_between_within_diffs) %>%
@@ -287,19 +288,29 @@ childes_null <- rbind(childes_target_diffs,
 rbind(childes_target_diffs, childes_random_diffs, childes_between_within_diffs) %>%
   filter(target_word != "null") %>%
   mutate(target_word = factor(target_word, 
-                                 levels = c("time", "space",
-                                           "short","shorter","long","longer",
-                                           "longest"))) %>%
+                              levels = c("time", "space",
+                                         "short", "shorter",
+                                         "long", "longer", "longest"),
+                              labels = c("time list \nwords", "space list \nwords",
+                                         "short", "shorter", 
+                                         "long", "longer", "longest"))) %>%
   ggplot() +
   geom_pointrange(aes(y = target_word, x = space_time_diff, 
                       xmin = diff_ci_lower, xmax = diff_ci_upper),
                   position = position_dodge(width = 0.5)) +
-  geom_vline(xintercept = childes_null$space_time_diff, color = "orange") 
+  geom_vline(xintercept = childes_null$space_time_diff, color = "orange") +
+  xlab("More temporal                             More spatial\nSpace - Time similarity score") +
+  ylab("Target word") +
+  ggtitle("Space - Time similarity scores of target words in CHILDES")+ 
+  theme(plot.title = element_text(size = 14))
 ```
 
 CHILDES mean similarities between target words and space/time words.
 
-```{r coca-plot}
+
+
+
+```{r coca-plot, fig.width = 7}
 
 coca_null <- rbind(coca_target_diffs, coca_random_diffs, coca_between_within_diffs) %>%
   filter(target_word == "null") 
@@ -307,14 +318,21 @@ coca_null <- rbind(coca_target_diffs, coca_random_diffs, coca_between_within_dif
 rbind(coca_target_diffs, coca_random_diffs, coca_between_within_diffs) %>%
   filter(target_word != "null") %>%
   mutate(target_word = factor(target_word, 
-                                 levels = c("time", "space",
-                                           "short","shorter", "shortest",
-                                           "long","longer", "longest"))) %>%
+                              levels = c("time", "space",
+                                         "short", "shorter", "shortest",
+                                         "long", "longer", "longest"),
+                              labels = c("time list \nwords", "space list \nwords",
+                                         "short", "shorter", "shortest",
+                                         "long", "longer", "longest"))) %>%
   ggplot() +
   geom_pointrange(aes(y = target_word, x = space_time_diff, 
                       xmin = diff_ci_lower, xmax = diff_ci_upper),
                   position = position_dodge(width = 0.5)) +
-  geom_vline(xintercept = coca_null$space_time_diff, color = "orange") 
+  geom_vline(xintercept = coca_null$space_time_diff, color = "orange") +
+  xlab("More temporal                             More spatial\nSpace - Time similarity score") +
+  ylab("Target word") +
+  ggtitle("Space - Time similarity scores of target words in COCA") + 
+  theme(plot.title = element_text(size = 14))
 
 ```
 
