@@ -1,0 +1,191 @@
+---
+title: "spacetime_frequency"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(irr)
+```
+
+  Using the R package childesr, we pulled all the utterances (target utterances) in the North American English corpora of CHILDES that contained instances of our target words (e.g.“long”, "longer","longest",“short”, "shorter","shortest"). We also pulled four context utterances for each target utterance: the two utterances that came before and the two utterances that came after each target utterance. We excluded the target utterances for children older than 12, for which the target child's age is not available and which are produced by somebody other than a target child or a parent (e.g. experimenter). This processes yielded a total of 4093 target utterances. 
+ A native English speaker coded usages of each target word as spatial (n=1719; “short hair”), temporal (n=1800; “long nap”), or other (n=574), based on the target and the context utterances containing that target word. The other category included cases where the use of the target word is both spatial and temporal (e.g. motion descriptions like "long run"),  there is not enough context to decide on the meaning of the target word,  the target word is a frozen lexical item/idiom (e.g. "shortbread"), or has another (non-spatial and non-temporal) predominant meaning ("go long on wheat", "long for a time", "as long as"). 
+
+```{r}
+freqChildes <- read.csv("~/Dropbox/Desktop_Macbook Air & Mac/Projects/ST corpus/Data/LongShort files/Childes/longShortWithContext_Aidel_June18.csv") %>%
+  mutate(speaker_role = ifelse(speaker_role == "Target_Child", "Child", "Adult")) %>%
+  mutate(speaker_role = as.factor(speaker_role)) %>%
+  mutate(TScode = as.factor(as.character(tolower(TScode))))  %>%
+  mutate(speaker_id = as.factor(speaker_id)) %>%
+  filter(target_child_age <= 144) %>%
+  mutate(ageGroup = ifelse(target_child_age <= 72, "6 and under", "7 and older")) %>%
+  mutate(ageGroup2 = ifelse(target_child_age <= 36, "younger than 3", 
+                            ifelse(target_child_age <= 72, "3-6", "older than 6"))) %>%
+  mutate(ageGroup2 = factor(ageGroup2, levels=c("younger than 3", "3-6", "older than 6"))) %>%
+  mutate(spacetime = ifelse(TScode == "s", "s", 
+                     ifelse(TScode == "t", "t", "o"))) %>%
+  mutate(spacetime = as.factor(spacetime)) %>%
+  mutate(targetType = ifelse(str_detect(tokenUtterance, 'long'), "long", "short"))
+```
+
+```{r}
+summaryUtterances <- freqChildes %>%
+  group_by(speaker_role) %>%
+  tally()
+
+kable(summaryUtterances)
+```
+
+```{r}
+summaryAge <- freqChildes %>%
+  filter(speaker_role == "Child") %>%
+  summarise(meanAge = mean(target_child_age)) 
+
+kable(summaryAge)
+```
+
+
+
+ A random subset of the target utterances (10%; n=410) were independently recoded by a second native English speaker. The two coders showed high agreement in deciding whether a given utterance is space or time (inter-coder agreement=92%; Cohen’s kappa=0.87).
+ 
+```{r}
+reliabilityCoderData <- read.csv("~/Dropbox/Desktop_Macbook Air & Mac/Projects/ST corpus/Data/LongShort files/Corinne reliability/longshortReliability_Childes_forCorinne.csv") %>%
+  mutate(TScode = as.factor(as.character(tolower(TScode))))  %>%
+  mutate(spacetime = ifelse(TScode == "s", "s", 
+                     ifelse(TScode == "t", "t", "o"))) %>%
+  mutate(spacetime = as.factor(spacetime)) %>%
+  select(uniqueToken, tokenUtterance, spacetime)
+
+reliabilityCheck <- freqChildes %>%
+  merge(reliabilityCoderData, by.x="uniqueToken", by.y="uniqueToken", all.y=TRUE) %>%
+  mutate(spacetime.x = as.character(spacetime.x)) %>%
+  mutate(spacetime.y = as.character(spacetime.y)) %>%
+  mutate(noMatch = (spacetime.x == spacetime.y)) %>%
+  mutate(noMatch = as.factor(noMatch)) %>%
+  select(spacetime.x, spacetime.y, noMatch)
+
+kable(summary(reliabilityCheck$noMatch))
+```
+
+
+```{r}
+kappa2(reliabilityCheck[,c(1,2)], "unweighted")
+```
+
+
+
+Only for instances that Coder 1 coded as space and time: 
+
+ A random subset of the target utterances that were coded as space and time by Coder 1 (10%; n=348) were independently recoded by a second native English speaker. The two coders showed high agreement in deciding whether a given utterance is space or time (inter-coder agreement=94%; Cohen’s kappa=.89).
+
+```{r}
+reliabilityCheckOnlyST <- reliabilityCheck %>%
+  filter(spacetime.x == "s" | spacetime.x == "t")
+
+kable(summary(reliabilityCheckOnlyST$noMatch))
+```
+```{r}
+kappa2(reliabilityCheckOnlyST[,c(1,2)], "unweighted")
+```
+
+
+
+```{r}
+freqChildesPlot <- freqChildes %>%
+  filter(spacetime == "s" | spacetime == "t") %>%
+  mutate(spacetimenumeric = ifelse(spacetime == "s", 1, 0))
+```
+
+
+```{r}
+freqChildesBySubject <- freqChildes %>%
+  filter(spacetime == "s" | spacetime == "t") %>%
+  mutate(spacetimenumeric = ifelse(spacetime == "s", 1, 0)) %>%
+  group_by(speaker_role, speaker_id, spacetime, ageGroup2, targetType) %>%
+  count() %>%
+  spread(spacetime, n) %>%
+  mutate(s = ifelse(is.na(s), 0, s)) %>%
+  mutate(t = ifelse(is.na(t), 0, t)) %>%
+  mutate(totalObservation = s + t) %>%
+  mutate(spacePercent = s/(s+t)) 
+```
+
+```{r}
+freqChildesBySubjectChild <- freqChildesBySubject %>%
+  filter(speaker_role == "Child")
+```
+
+```{r}
+freqChildesBySubjectAdult <- freqChildesBySubject %>%
+  filter(speaker_role == "Adult")
+```
+
+```{r}
+freqChildesChild <- freqChildesPlot %>%
+  filter(speaker_role == "Child")
+```
+
+```{r}
+freqChildesAdult <- freqChildesPlot %>%
+  filter(speaker_role == "Adult")
+```
+
+
+
+```{r}
+ggplot() +
+    geom_jitter(data = freqChildesBySubjectChild, aes(x = targetType, y = spacePercent, size=totalObservation), alpha=0.2, binaxis='y', stackdir='center', color="blue") +
+  stat_summary(data = freqChildesChild, aes(x = targetType, y = spacetimenumeric), fun.data = "mean_cl_boot",geom = "pointrange",size = 0.7, width=0.1, position = position_dodge(0.7))+
+  #stat_summary(data = freqChildesPlot, aes(x = speaker_role, y = spacetimenumeric),fun = mean, geom = "point", position = position_dodge(0.7),size = 2) +
+  geom_hline(yintercept = .50, color = "orange") +
+  theme_classic() +
+  labs(y = "More temporal                                                                                     More spatial", x = "Target word", title = "Spatial and temporal uses of long and short for child speakers \nin CHILDES") +
+  scale_y_continuous(limits = c(0,1), breaks = seq(0, 1, by = .10)) +
+  theme(text = element_text(family="Times New Roman", size = 14)) +
+  theme(legend.position = "top") +
+  scale_size(range = c(0.5, 8),name='Total number of instances \nfor each child')+
+  coord_flip()
+```
+
+
+
+```{r}
+ggplot() +
+    geom_jitter(data = freqChildesBySubjectChild, aes(x = targetType, y = spacePercent, size=totalObservation), alpha=0.2, binaxis='y', stackdir='center') +
+  stat_summary(data = freqChildesChild, aes(x = targetType, y = spacetimenumeric), fun.data = "mean_cl_boot",geom = "pointrange",size = 0.7, width=0.1, position = position_dodge(0.7))+
+  #stat_summary(data = freqChildesPlot, aes(x = speaker_role, y = spacetimenumeric),fun = mean, geom = "point", position = position_dodge(0.7),size = 2) +
+  geom_hline(yintercept = .50, color = "orange") +
+  theme_classic() +
+  facet_wrap(~ageGroup2, nrow=3)+
+  labs(y = "More temporal                                                                                     More spatial", x = "Target word", title = "Spatial and temporal uses of long and short for child speakers \nin CHILDES by age group") +
+  scale_y_continuous(limits = c(0,1), breaks = seq(0, 1, by = .10)) +
+  theme(text = element_text(family="Times New Roman", size = 14)) +
+  theme(legend.position = "top") +
+  scale_size(range = c(0.5, 8),name='Total number of instances \nfor each child')+
+  coord_flip()
+```
+
+
+```{r}
+ggplot() +
+    geom_jitter(data = freqChildesBySubjectAdult, aes(x = targetType, y = spacePercent, size=totalObservation), alpha=0.2, binaxis='y', stackdir='center') +
+  stat_summary(data = freqChildesAdult, aes(x = targetType, y = spacetimenumeric), fun.data = "mean_cl_boot",geom = "pointrange",size = 0.7, width=0.1, position = position_dodge(0.7))+
+  #stat_summary(data = freqChildesPlot, aes(x = speaker_role, y = spacetimenumeric),fun = mean, geom = "point", position = position_dodge(0.7),size = 2) +
+  geom_hline(yintercept = .50, color = "orange") +
+  theme_classic() +
+  labs(y = "More temporal                                                                                     More spatial", x = "Target word", title = "Spatial and temporal uses of long and short for adult speakers \nin CHILDES") +
+  scale_y_continuous(limits = c(0,1), breaks = seq(0, 1, by = .10)) +
+  theme(text = element_text(family="Times New Roman", size = 14)) +
+  theme(legend.position = "top") +
+  scale_size(range = c(0.5, 8),name='Total number of instances \nfor each adult')+
+  coord_flip()
+```
+
+
+
+
+
+
+
+
