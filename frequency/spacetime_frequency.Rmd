@@ -13,7 +13,7 @@ library(irr)
  A native English speaker coded usages of each target word as spatial (n=1719; “short hair”), temporal (n=1800; “long nap”), or other (n=574), based on the target and the context utterances containing that target word. The other category included cases where the use of the target word is both spatial and temporal (e.g. motion descriptions like "long run"),  there is not enough context to decide on the meaning of the target word,  the target word is a frozen lexical item/idiom (e.g. "shortbread"), or has another (non-spatial and non-temporal) predominant meaning ("go long on wheat", "long for a time", "as long as"). 
 
 ```{r}
-freqChildes <- read.csv("~/Dropbox/Desktop_Macbook Air & Mac/Projects/ST corpus/Data/LongShort files/Childes/longShortWithContext_Aidel_June18.csv") %>%
+freqChildes <- read.csv("~/Documents/GitHub/spacetime/frequency/spacetime_frequency_childes.csv") %>%
   mutate(speaker_role = ifelse(speaker_role == "Target_Child", "Child", "Adult")) %>%
   mutate(speaker_role = as.factor(speaker_role)) %>%
   mutate(TScode = as.factor(as.character(tolower(TScode))))  %>%
@@ -45,12 +45,10 @@ summaryAge <- freqChildes %>%
 kable(summaryAge)
 ```
 
-
-
  A random subset of the target utterances (10%; n=410) were independently recoded by a second native English speaker. The two coders showed high agreement in deciding whether a given utterance is space or time (inter-coder agreement=92%; Cohen’s kappa=0.87).
  
 ```{r}
-reliabilityCoderData <- read.csv("~/Dropbox/Desktop_Macbook Air & Mac/Projects/ST corpus/Data/LongShort files/Corinne reliability/longshortReliability_Childes_forCorinne.csv") %>%
+reliabilityCoderData <- read.csv("~/Documents/GitHub/spacetime/frequency/reliability/longshortReliability_Childes_forCorinne.csv") %>%
   mutate(TScode = as.factor(as.character(tolower(TScode))))  %>%
   mutate(spacetime = ifelse(TScode == "s", "s", 
                      ifelse(TScode == "t", "t", "o"))) %>%
@@ -72,7 +70,6 @@ kable(summary(reliabilityCheck$noMatch))
 ```{r}
 kappa2(reliabilityCheck[,c(1,2)], "unweighted")
 ```
-
 
 
 Only for instances that Coder 1 coded as space and time: 
@@ -135,7 +132,7 @@ freqChildesAdult <- freqChildesPlot %>%
 
 ```{r}
 ggplot() +
-    geom_jitter(data = freqChildesBySubjectChild, aes(x = targetType, y = spacePercent, size=totalObservation), alpha=0.2, binaxis='y', stackdir='center', color="blue") +
+    geom_jitter(data = freqChildesBySubjectChild, aes(x = targetType, y = spacePercent, size=totalObservation), alpha=0.2, binaxis='y', stackdir='center') +
   stat_summary(data = freqChildesChild, aes(x = targetType, y = spacetimenumeric), fun.data = "mean_cl_boot",geom = "pointrange",size = 0.7, width=0.1, position = position_dodge(0.7))+
   #stat_summary(data = freqChildesPlot, aes(x = speaker_role, y = spacetimenumeric),fun = mean, geom = "point", position = position_dodge(0.7),size = 2) +
   geom_hline(yintercept = .50, color = "orange") +
@@ -183,9 +180,100 @@ ggplot() +
 ```
 
 
+  We pulled all the utterances ...
+ 
+```{r}
+freqCOCA <- read.csv("~/Documents/GitHub/spacetime/frequency/spacetime_frequency_coca.csv") %>%
+  mutate(TScode = as.factor(as.character(tolower(Code))))
+```
+
+  A random subset of the target utterances (%; n=200) were independently recoded by a second native English speaker. The two coders showed high agreement in deciding whether a given utterance is space or time (inter-coder agreement=%; Cohen’s kappa=).
+  
+  The Token_ID's don't match correctly -- I need to check this again. 
+
+```{r}
+shortCocaRecoded <- read.csv("~/Documents/GitHub/spacetime/frequency/reliability/shortReliability_COCA_forCorinne.csv") %>%
+  mutate(tokenType = "short")
+longCocaRecoded <- read.csv("~/Documents/GitHub/spacetime/frequency/reliability/longReliability_COCA_forCorinne.csv") %>%
+  mutate(tokenType = "long") 
+
+cocaRecoded <- shortCocaRecoded %>%
+  rbind(longCocaRecoded) %>%
+  mutate(TScode = as.factor(as.character(tolower(X.9)))) %>%
+  select(Token_ID, Corpora, Source, Context, tokenType, TScode)
+  
+reliabilityCheckCoca <- freqCOCA %>%
+  merge(cocaRecoded, by="Token_ID") %>%
+  mutate(original = ifelse(TScode.x == "s", "s", ifelse(TScode.x == "t", "t", "other"))) %>%
+  mutate(recoded = ifelse(TScode.y == "s", "s", ifelse(TScode.y == "t", "t", "other"))) %>%
+  mutate(original = as.character(original)) %>%
+  mutate(recoded = as.character(recoded)) %>%
+  mutate(noMatch = (original == recoded))  
+
+nonMatchingCases <- reliabilityCheckCoca %>%
+  filter(noMatch == FALSE) 
+```
 
 
+```{r}
+freqCOCAPlot <- freqCOCA %>%
+  filter(TScode == "s" | TScode == "t") %>%
+  mutate(spacetimenumeric = ifelse(TScode == "s", 1, 0))
+```
 
+```{r}
+freqCOCABySource <- freqCOCA %>%
+  filter(TScode == "s" | TScode == "t") %>%
+  mutate(spacetimenumeric = ifelse(TScode == "s", 1, 0)) %>%
+  group_by(Source, TScode, tokenType) %>%
+  count() %>%
+  spread(TScode, n) %>%
+  mutate(s = ifelse(is.na(s), 0, s)) %>%
+  mutate(t = ifelse(is.na(t), 0, t)) %>%
+  mutate(totalObservation = s + t) %>%
+  mutate(spacePercent = s/(s+t)) 
+```
 
+```{r}
+ggplot() +
+    geom_jitter(data = freqCOCABySource, aes(x = tokenType, y = spacePercent, size=totalObservation), alpha=0.1, binaxis='y', stackdir='center') +
+  stat_summary(data = freqCOCAPlot, aes(x = tokenType, y = spacetimenumeric), fun.data = "mean_cl_boot",geom = "pointrange",size = 0.7, width=0.1, position = position_dodge(0.7))+
+  #stat_summary(data = freqChildesPlot, aes(x = speaker_role, y = spacetimenumeric),fun = mean, geom = "point", position = position_dodge(0.7),size = 2) +
+  geom_hline(yintercept = .50, color = "orange") +
+  theme_classic() +
+  labs(y = "More temporal                                                                                     More spatial", x = "Target word", title = "Spatial and temporal uses of long and short for adult speakers \nin COCA") +
+  scale_y_continuous(limits = c(0,1), breaks = seq(0, 1, by = .10)) +
+  theme(text = element_text(family="Times New Roman", size = 14)) +
+  theme(legend.position = "top") +
+  scale_size(range = c(0.5, 8),name='Total number of instances \nfor each source corpora')+
+  coord_flip()
+```
 
+```{r}
+freqCOCAByCorporaType <- freqCOCA %>%
+  filter(TScode == "s" | TScode == "t") %>%
+  mutate(spacetimenumeric = ifelse(TScode == "s", 1, 0)) %>%
+  group_by(Corpora, TScode, tokenType) %>%
+  count() %>%
+  spread(TScode, n) %>%
+  mutate(s = ifelse(is.na(s), 0, s)) %>%
+  mutate(t = ifelse(is.na(t), 0, t)) %>%
+  mutate(totalObservation = s + t) %>%
+  mutate(spacePercent = s/(s+t)) 
+```
+
+```{r}
+ggplot() +
+    geom_jitter(data = freqCOCAByCorporaType, aes(x = tokenType, y = spacePercent, size=totalObservation, color=Corpora), alpha=0.3, binaxis='y', stackdir='center') +
+  stat_summary(data = freqCOCAPlot, aes(x = tokenType, y = spacetimenumeric), fun.data = "mean_cl_boot",geom = "pointrange",size = 0.7, width=0.1, position = position_dodge(0.7))+
+  #stat_summary(data = freqChildesPlot, aes(x = speaker_role, y = spacetimenumeric),fun = mean, geom = "point", position = position_dodge(0.7),size = 2) +
+  geom_hline(yintercept = .50, color = "orange") +
+  theme_classic() +
+  labs(y = "More temporal                                              More spatial", x = "Target word", title = "Spatial and temporal uses of long and short for adult speakers \nin COCA") +
+  scale_y_continuous(limits = c(0,1), breaks = seq(0, 1, by = .10)) +
+  theme(text = element_text(family="Times New Roman", size = 14)) +
+  #theme(legend.position = "top") +
+  scale_size(range = c(0.5, 8),name='Total number of instances \nfor each corpora type')+
+  coord_flip()
+```
 
